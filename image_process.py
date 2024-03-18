@@ -111,14 +111,19 @@ def tif_to_png(file_path):
 
 # 计算坡度、坡向和曲率
 def calculate_sac(dem, geotransform, id):
-    method = id - 6
+    method = int(id) - 6
     # 转换DEM数据为浮点数
+    dem[dem == -32768] = 0
     dem = dem.astype(np.float32)
     # 计算x和y方向上的梯度
     dx = np.gradient(dem, geotransform[1])
     dy = np.gradient(dem, geotransform[5])
     # 计算坡度（度）
-    slope = np.degrees(np.arctan(np.sqrt(dx ** 2 + dy ** 2)))
+    # 首先计算dx和dy的平方和
+    squared_dx = dx[0] ** 2 + dx[1] ** 2
+    squared_dy = dy[0] ** 2 + dy[1] ** 2
+    # 然后计算平方和的平方根
+    slope = np.degrees(np.arctan(np.sqrt(squared_dx + squared_dy)))
     # 计算坡向（度）
     aspect = np.degrees(np.arctan2(dx, dy))
     # 计算曲率

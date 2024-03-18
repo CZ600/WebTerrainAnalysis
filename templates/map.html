@@ -148,7 +148,9 @@
                                                     <span id="rangeValue_high">8</span>
                                                     <input type="range" class="form-range" min="3" max="13" step="2" id="high_k">
                                                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                                        <button type="button" class="btn btn-outline-primary btn-lg mt = 2 mr-4" id="提交高通" onclick="addBadge('高通滤波',document.getElementById('rangeValue_high').textContent)">确认</button>
+                                                        <button type="button"
+                                                                class="btn btn-outline-primary btn-lg mt = 2 mr-4" id="提交高通"
+                                                                onclick="addBadge('高通滤波',document.getElementById('rangeValue_high').textContent)">确认</button>
                                                     </div>
 
                                                 </div>
@@ -159,7 +161,9 @@
                                                     <span id="rangeValue_low">8</span>
                                                     <input type="range" class="form-range" min="3" max="13" step="2" id="low_k">
                                                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                                        <button type="button" class="btn btn-outline-primary btn-lg mt = 2 mr-4" id="提交低通" onclick="addBadge('低通滤波',document.getElementById('rangeValue_low').textContent)">确认</button>
+                                                        <button type="button"
+                                                                class="btn btn-outline-primary btn-lg mt = 2 mr-4" id="提交低通"
+                                                                onclick="addBadge('低通滤波',document.getElementById('rangeValue_low').textContent)">确认</button>
                                                     </div>
                                                 </div>
                                               </div>
@@ -169,13 +173,17 @@
                                                     <span id="rangeValue_mid">8</span>
                                                     <input type="range" class="form-range" min="3" max="13" step="2" id="mid_k">
                                                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                                        <button type="button" class="btn btn-outline-primary btn-lg mt = 2 mr-4" id="提交中值" onclick="addBadge('中值滤波',document.getElementById('rangeValue_mid').textContent)">确认</button>
+                                                        <button type="button"
+                                                                class="btn btn-outline-primary btn-lg mt = 2 mr-4" id="提交中值"
+                                                                onclick="addBadge('中值滤波',document.getElementById('rangeValue_mid').textContent)">确认</button>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="collapse" id="线性拉伸">
                                                 <div class="card card-body mb-2">
-                                                    <button type="button" class="btn btn-outline-primary btn-lg mt = 2 mr-4" id="提交线性" onclick="addBadge('线性拉伸',0)">确认选择线性变换</button>
+                                                    <button type="button"
+                                                            class="btn btn-outline-primary btn-lg mt = 2 mr-4" id="提交线性"
+                                                            onclick="addBadge('线性拉伸',0)">确认选择线性变换</button>
                                                 </div>
                                             </div>
                                             <div class="collapse" id="对数变换">
@@ -184,7 +192,10 @@
                                                     <span id="rangeValue_log">5.0</span>
                                                     <input type="range" class="form-range" min="0.1" max="10" step="0.1" id="log_k">
                                                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                                        <button type="button" class="btn btn-outline-primary btn-lg mt = 2 mr-4" id="提交对数" onclick="addBadge('对数变换',document.getElementById('rangeValue_log').textContent)">确认</button>
+                                                        <button type="button"
+                                                                class="btn btn-outline-primary btn-lg mt = 2 mr-4"
+                                                                id="提交对数" onclick="addBadge('对数变换',
+                                                                document.getElementById('rangeValue_log').textContent)">确认</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -220,6 +231,8 @@
                                       </div>
                                         <div class="d-flex justify-content-end">
                                           <button type="button" class="btn btn-outline-info mt-2" id="startImageProcess" style="width: 100%" >运行</button>
+                                          <button type="button" class="btn btn-outline-info mt-2" id="save_preProcess_image" style="width: 100%" >保存</button>
+                                          <button type="button" class="btn btn-outline-info mt-2" id="display_preProcess_image" style="width: 100%" >显示</button>
                                         </div>
                                 </div>
                             </div>
@@ -254,8 +267,13 @@
    -->
 <script src="/static/lib/jquery-371/jquery.js"></script>
 <!--一引入bootstrap-inputfile 库 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.2/js/fileinput.min.js" integrity="sha512-XxRivO6jA7xU9a0ozATMIFQFdNySyRrB8uE1QctFmjTTGSGUj9tC7CpnVf7xq1e/QeVhbY9ZLbxEzPFIWpW+xA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.2/css/fileinput-rtl.min.css" integrity="sha512-cW5eHYgf3UouIiLHYAXDLI/FFo4Mgk0S271cW6LabPtejrWYR//RTjgte7YW7Ir11EFG8H7SQgAlEWYEF3OeVA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.2/js/fileinput.min.js"
+        integrity="sha512-XxRivO6jA7xU9a0ozATMIFQFdNySyRrB8uE1QctFmjTTGSGUj9tC7CpnVf7xq1e/QeVhbY9ZLbxEzPFIWpW+xA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.2/css/fileinput-rtl.min.css"
+      integrity="sha512-cW5eHYgf3UouIiLHYAXDLI/FFo4Mgk0S271cW6LabPtejrWYR//RTjgte7YW7Ir11EFG8H7SQgAlEWYEF3OeVA=="
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
 <!-- 引入 OpenLayers 库 -->
 <script src="https://cdn.jsdelivr.net/npm/ol/ol.js"></script>
 {#  #}

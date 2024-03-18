@@ -1,4 +1,7 @@
-// 定义地图
+// 存放地理位置坐标数据
+var imageLocation = []
+
+// 定义地图控件
 let overviewMapControl = new ol.control.OverviewMap({
       className: 'ol-overviewmap ol-custom-overviewmap',
       layers: [
@@ -16,7 +19,7 @@ let overviewMapControl = new ol.control.OverviewMap({
       collapsed: false
     });
 
-
+// 定义一个ol地图
 var map = new ol.Map({
     target: 'map',
     layers: [
@@ -97,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // 将元素添加到处理流程中并在容器中显示
-var listProcess = Array()
+var listProcess = Array();
 var processValue = Array()
 function addBadge(processName,value= 0) {
   var badgeContainer = document.getElementById("processStream");
@@ -128,6 +131,7 @@ function uploadFile() {
         // 服务器返回的JSON对象包含一个'url'键
           var imageUrl = data.url; // 从JSON对象中获取URL
           var location = data.location
+          imageLocation = location
           console.log(imageUrl);
           raw_png_location = imageUrl
         //var extent = ol.proj.transformExtent([73, 12.2, 135, 54.2], 'EPSG:4326', 'EPSG:3857');
@@ -145,7 +149,6 @@ function uploadFile() {
         console.log('File uploaded successfully');
         console.log(location)
 
-
         // 设置地图的中心点
         var newCenter= [location[0], location[1]]; // 将经纬度转换为地图的投影坐标系
         console.log(newCenter)
@@ -162,6 +165,7 @@ function uploadFile() {
     }
 
 
+// 开始图像处理流程
 const startProcess = async function (processList, valueList, imageUrl) {
     // 存放数据
      const data = {
@@ -199,6 +203,7 @@ function replaceFileExtension(url, newExtension) {
     const newUrl = url.replace(/\.[^\.]+$/, `.${newExtension}`);
     return newUrl;
 }
+
 button_start_imageProcess = document.getElementById("startImageProcess")
 button_start_imageProcess.addEventListener("click", function () {
     procedure = document.getElementById("procedure")
@@ -217,6 +222,8 @@ button_start_imageProcess.addEventListener("click", function () {
             console.log(error);
         });
 })
+
+
 // 实现树状结构管理图层
 function getTree() {
   // Some logic to retrieve, or generate tree structure
@@ -267,25 +274,29 @@ function getTree() {
         text: "Node 2",
         icon: "fa fa-folder"
       },
-      {
-        text: "Node 3",
-        icon: "fa fa-folder"
-      },
-      {
-        text: "Node 4",
-        icon: "fa fa-folder"
-      },
-      {
-        text: "Node 5",
-        icon: "fa fa-folder"
-      }
     ];
   return tree;
 }
 
 $('#tree').bstreeview({ data: getTree() });
 
+// 将预处理完成后的图像显示到地图上
+display_button = document.getElementById("display_preProcess_image");
+display_button.addEventListener("click", function(){
+    const resultImage = document.getElementById("resultImage");
+    const imageUrl = resultImage.src;
+    console.log('图像地址：', imageUrl);
+    // 添加新图层
+    const imageLayer_P = new ol.layer.Image({
+        source: new ol.source.ImageStatic({
+            url: imageUrl,
+            projection: 'EPSG:3857',
+            imageExtent: imageLocation
+        })
+    });
+    map.addLayer(imageLayer_P);
 
+});
 
 
 
