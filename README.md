@@ -1,5 +1,5 @@
 ## 软件开发主体 
-本项目为一个基于openlayer+postgresql的建议的在线gis地形地貌信息分析软件
+本项目为一个基于openlayer+postgresql的在线gis地形地貌信息分析软件
 ## 运行要求
 - 环境：python3.9
 - flask
