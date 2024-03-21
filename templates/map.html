@@ -1,26 +1,21 @@
 {% extends "header.html" %}
-
 {% block title %}地图+功能主体{% endblock %}
 {% block mystyle %}
     <!-- 引入 EasyUI 的 CSS 文件 -->
     <!--<link rel="stylesheet" href="/static/lib/jquery-easyui-1.8.6/themes/default/easyui.css">
     <link rel="stylesheet" href="/static/lib/jquery-easyui-1.8.6/themes/icon.css">-->
-
     {# 引入openlayer #}
     <link rel="stylesheet" href="/static/lib/openlayers-9.0/ol.css">
     <!--<script src="https://cdn.bootcdn.net/ajax/libs/openlayers/8.1.0/dist/ol.js"></script>-->
     <script src = "/static/lib/openlayers-9.0/dist/ol.js"></script>
     <!-- 引入jQuery和Bootstrap JavaScript库 -->
     {#
-
     <script src="/static/lib/jquery-371/jquery.min.js"></script>
 #}
     <!--<script src="/static/lib/jquery-easyui-1.8.6/jquery.easyui.min.js"></script>
     -->
     <script src = "/static/lib/bs5treeview/src/css/bstreeview.css"></script>
     <script src="/static/lib/jquery-371/jquery.js"></script>
-
-
     <style>
       .map {
         height: 900px;
@@ -28,13 +23,21 @@
       }
       #offcanvasRight
       {
-          width:800px;
+          width:1000px;
+      }
+      {# /* 隐藏加载图标 */#}
+      {#.spinner-border {#}
+      {#  display: none;#}
+      {# #}
+      /* 加载状态下的按钮样式 */
+      .loading .spinner-border {
+        display: inline-block;
+      }
+      .loading .btn {
+        visibility: hidden;
       }
     </style>
-
 {% endblock %} mystyle %}
-
-
 {% block content %}
  <div class="container-fluid">
     <div class="row">
@@ -88,7 +91,35 @@
                             <div class="offcanvas-body">
                             {# 弹窗内容 #}
                                 <div class="container px-4">
-                                    <div class="row gy-5">
+                                    <div class = "row">
+                                            <div class="col-4">
+                                                <div class="col-sm">
+                                                <figure class="text-center">
+                                                    <figcaption class="blockquote-footer">
+                                                        智能处理
+                                                    </figcaption>
+                                                </figure>
+                                                </div>
+                                                <div class="form-floating">
+                                                    <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 300px" ></textarea>
+                                                    <label for="floatingTextarea2">输入处理需求</label>
+                                                </div>
+                                                <div class="row mt-1">
+                                                    <div class="col">
+                                                      <!-- 在同一行上放置按钮和加载图标 -->
+                                                      <div class="d-inline-block" style="width:calc(100% - 40px); display:inline-block;">
+                                                          <button class="btn btn-primary" type="button" id="textSubmit">提交</button>
+
+                                                      </div>
+{#                                                      <!-- 加载图标放在右侧 -->#}
+{#                                                      <div class="spinner-border text-primary float-right mt-2" role="status">#}
+{#                                                        <span class="sr-only" id="spinner1"></span>#}
+{#                                                      </div>#}
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="col-8">
+                                            <div class="row gy-5">
                                         <div class="col-sm">
                                             <figure class="text-center">
                                                 <figcaption class="blockquote-footer">
@@ -224,9 +255,7 @@
                                                 <a class="btn btn-primary" id="aspect"  role="button" aria-expanded="false" onclick="addBadge('坡向')">
                                                   坡向
                                                 </a>
-
                                             </p>
-
                                           </div>
                                       </div>
                                         <div class="d-flex justify-content-end">
@@ -235,6 +264,10 @@
                                           <button type="button" class="btn btn-outline-info mt-2" id="display_preProcess_image" style="width: 100%" >显示</button>
                                         </div>
                                 </div>
+                                        </div>
+
+                                    </div>
+
                             </div>
                         </div>
                      </div>
@@ -250,7 +283,7 @@
             <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
                 {# 折叠菜单内容存放处 #}
                 <div class="accordion-body">
-                  <button> 你好 </button>
+                  <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>
                 </div>
             </div>
           </div>
@@ -261,10 +294,9 @@
       </div>
     </div>
   </div>
-  <!-- 引入OpenLayers JavaScript库 -->
-  <script src="https://cdn.bootcdn.net/ajax/libs/openlayers/8.1.0/dist/ol.js"></script>
-  <!-- 引入jQuery和Bootstrap JavaScript库
-   -->
+<!-- 引入OpenLayers JavaScript库 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/openlayers/8.1.0/dist/ol.js"></script>
+<!-- 引入jQuery和Bootstrap JavaScript库-->
 <script src="/static/lib/jquery-371/jquery.js"></script>
 <!--一引入bootstrap-inputfile 库 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.2/js/fileinput.min.js"
@@ -274,11 +306,10 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.5.2/css/fileinput-rtl.min.css"
       integrity="sha512-cW5eHYgf3UouIiLHYAXDLI/FFo4Mgk0S271cW6LabPtejrWYR//RTjgte7YW7Ir11EFG8H7SQgAlEWYEF3OeVA=="
       crossorigin="anonymous" referrerpolicy="no-referrer" />
-<!-- 引入 OpenLayers 库 -->
-<script src="https://cdn.jsdelivr.net/npm/ol/ol.js"></script>
-{#  #}
+{#  引入bstreeview 插件#}
 <script src = "/static/lib/bs5treeview/src/js/bstreeview.js"></script>
-
+<!-- 引入pooper.js库 -->
+<script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
 <script src="/static/js/map.js"></script>
 {% endblock %}
 

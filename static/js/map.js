@@ -214,7 +214,7 @@ button_start_imageProcess.addEventListener("click", function () {
     const myPromise = new Promise((resolve, reject) => {
     // 异步操作
         console.log("开始处理图像");
-        startProcess(listProcess,processValue,rawUrlTif)
+        startProcess(listProcess, processValue, rawUrlTif)
     });
     myPromise.then(result => {
             console.log(result); // 输出result
@@ -298,5 +298,67 @@ display_button.addEventListener("click", function(){
 
 });
 
+// 智能处理部分
+// fetch 异步提交表单数据
+async function textProcess(string, url) {
+  // 构建请求选项
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ string: string, url: url }) // 将字符串和图像地址转换为JSON格式的字符串
+  };
+
+  try {
+    // 使用fetch发送请求
+    const response = await fetch('/semantic_analysis', options);
+    // 确保响应状态码是OK的
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    // 解析JSON响应
+    const result = await response.json();
+    // 打印处理后的字符串
+    console.log(result.resultUrl);
+    // 返回处理后的字符串
+    return result.resultUrl;
+  } catch (error) {
+    // 处理错误
+    console.error('Error sending string to backend:', error);
+    throw error;
+  }
+}
+
+// 请对该图像进行一次卷积核大小为5的高通滤波，然后进行一次线性拉伸,然后再进行一次卷积核为3的低通滤波
+// 监听按钮的点击事件
+document.addEventListener('DOMContentLoaded', (event) => {
+  // 确保DOM完全加载后再获取元素和添加事件监听器
+  const loadButton = document.getElementById('textSubmit');
+  loadButton.addEventListener('click', function() {
+  let textarea = document.getElementById("floatingTextarea2");
+  let text = textarea.value;
+  console.log('Text content:', text);
+  let url = document.getElementById("rawImage").src;
+  let tifUrl = replaceFileExtension(url, 'tif')
+  // 加载图案显示
+  //const spinner = document.getElementById('spinner1');
+  // 调用函数并传递一个字符串
+  textProcess(text, tifUrl).then(resultUrl => {
+        console.log('Processed string:', resultUrl);
+        uploadImage(resultUrl, 'resultImage');
+        //spinner.style.display = 'none'; // 加载完成后隐藏图案
+      }).catch(error => {
+        console.error('Error sending string to backend:', error);
+        //spinner.style.display = 'none'; // 加载完成后隐藏图案
+      });
+    });
+});
+
+/// <!-- 按钮放在左侧 -->
+//                                                         <button class="btn btn-primary" type="button" disabled>
+//                                                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+//                                                         Loading...
+//                                                         </button>
 
 

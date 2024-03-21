@@ -200,9 +200,10 @@ def image_cal(image, parmater, method):
 def process(methodList, parameters, image_url):
     print("开始图像预处理")
     print(image_url)
+    print(methodList)
     # 字典用于对于方法与代号
     code_dict = {"高通滤波": 0, "低通滤波": 1, "中值滤波": 2, "线性拉伸": 3, "对数变换": 4, "幂律变换": 5, "坡度": 6,
-                 "曲率": 7, "坡向": 8}
+                 "曲率": 7, "坡向": 8, "计算坡度": 6, "计算曲率": 7, "计算坡向": 8}
     # 生成保存图像的路径
     # 使用正则表达式匹配文件名
     match = re.search(r'/static/image/(.*?).tif', image_url)
@@ -234,7 +235,8 @@ def process(methodList, parameters, image_url):
     length = len(methodList)
     # 迭代处理图像
     for i in range(length):
-        method = code_dict[methodList[i]]
+        method_type = methodList[i].strip('\'')
+        method = code_dict[method_type]
         parameter = parameters[i]
         print(method, parameter)
         img = image_cal(dataset, parameter, method)
