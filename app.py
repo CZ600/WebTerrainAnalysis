@@ -3,13 +3,16 @@ import flask
 from flask_bootstrap import Bootstrap5
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
-from image_process import image_load
-from image_process import process
+from image_process import *
 from dashscope.api_entities.dashscope_response import Role
 from wsgiref.simple_server import make_server
 from chat import call_with_prompt
 import json
 from chatglm import chatGLM
+from image_merge import align_images
+from osgeo import gdal
+from X import predict, see_RGB
+import re
 
 # sk-ac7bd32e53284528855a5f03347a4e7c
 
@@ -35,12 +38,37 @@ def map():
 
 # 智能问答界面
 # 存储对话历史的列表
-
-
 @app.route("/chat", methods=['GET', 'POST'])
 @cross_origin("*")
 def chat():
     return flask.render_template("chat.html")
+
+
+# 地貌识别页面
+@app.route("/recognition", methods=['GET', 'POST'])
+@cross_origin("*")
+def recognition():
+    return flask.render_template("multimoding.html")
+
+
+# 多模态识别页面
+@app.route("/multimoding_page", methods=['GET', 'POST'])
+@cross_origin("*")
+def multimoding_page():
+    return flask.render_template("multimoding.html")
+
+
+# 土地利用分类页面
+@app.route("/land_classification", methods=['GET', 'POST'])
+@cross_origin("*")
+def land_classification():
+    return flask.render_template("land_classification.html")
+
+
+@app.route('/analysis', methods=['GET', 'POST'])
+@cross_origin("*")
+def analysis():
+    return flask.render_template("analysis.html")
 
 
 # 顶部导航栏
@@ -69,6 +97,28 @@ def upload():
             img_url, location_data = image_load(file)
 
             return jsonify({'url': img_url, 'location': location_data})
+
+    except Exception as e:
+        print(e)
+        return 'Internal server error', 500
+
+
+@app.route("/upload_RGB", methods=['POST'])
+@cross_origin("*")
+def upload_RGB():
+    try:
+        if 'file' not in request.files:
+            return 'No file part', 400
+        file = request.files['file']
+        if file.filename == '':
+            return 'No selected file', 400
+        if file:
+            # 读取tif文件
+            file = request.files['file']
+            # 调用图像处理函数处理,获取图像的url和图像的坐标数据
+            img_url = image_load_RGB(file)
+
+            return jsonify({'url': img_url})
 
     except Exception as e:
         print(e)
@@ -163,6 +213,43 @@ def get_ip():
     ip = request.host_url
     print("ip:", ip)
     return jsonify({'ip': ip})
+
+
+@app.route("/multimoding", methods=['GET', "POST"])
+@cross_origin("*")
+def multimoding():
+    image_url1 = request.json.get('near-infrared')
+    image_url2 = request.json.get("DEMImage")
+    image_url3 = request.json.get("slopeImage")
+    # 合成影像
+    print(image_url1)
+    m_image_name = align_images(image_url1, image_url2, image_url3)
+    print("merge_image:", m_image_name)
+    # 对图像进行识别
+    # 获取识别图像
+    temp_url = predict.split_and_reconstruct(m_image_name, (512, 512), 512, 'attention_unet')
+    predict_image = request.host_url + temp_url
+    classes = ["background", "lake", "vally"]
+    colormap = [[0, 0, 0], [192, 64, 128], [255, 255, 255]]
+    predict_dict = sum_rgb(classes, colormap, temp_url)
+    return jsonify({'resultUrl': predict_image, "sum_dict": predict_dict})
+
+
+@app.route("/classify", methods=['GET', "POST"])
+@cross_origin("*")
+def classify():
+    image_url = request.json.get("imageUrl")
+    print("imageUrl:", image_url)
+    base_url = re.sub(r'http://127.0.0.1:8000/', '', image_url)
+    print("loacal:", base_url)
+    classes = ["None", "Background", "Building", "Road", "Water", "Barren", "Forest", "Agriculture"]
+    colormap = [[0, 0, 0], [255, 255, 255], [180, 30, 30], [100, 100, 100], [0, 0, 255], [220, 220, 220],
+                [34, 139, 34], [255, 215, 0],
+                ]
+    temp_url = see_RGB.split_and_reconstruct_rgb(base_url, (512, 512), 128, 'unet_x')
+    predict_image = request.host_url + temp_url
+    result_dict = sum_rgb(classes, colormap, temp_url)  # 统计预测结果图像的数据分布方法
+    return jsonify({'resultUrl': predict_image, "sum_dict": result_dict})
 
 
 # 启动Flask应用程序

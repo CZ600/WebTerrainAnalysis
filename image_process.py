@@ -7,6 +7,21 @@ from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 from scipy import ndimage as ndi
 import re
+from os.path import dirname, abspath, join
+
+
+# 用于改名
+def match_image(path):
+    print(path)
+    match = re.search(r'result/(.*?).tif', path)
+    # 如果匹配成功，提取文件名
+    if match:
+        file_name = match.group(1)
+        print(file_name)  # 输出: file_process
+        return file_name
+    else:
+        print("No match found")
+        return EOFError
 
 
 # 归一化函数，传入数组，返回归一化后的数组【0,255】
@@ -72,6 +87,22 @@ def image_load(file):
     dataset = None  # 释放数据集
     # 返回url和地理位置信息
     return img_url, location_data
+
+
+# 加载rgb
+def image_load_RGB(file):
+    temp_file_path = "static/image/" + secure_filename(file.filename)
+    print(temp_file_path)
+    # 切割文件名称
+    filename_list = temp_file_path.split('.')
+    filename = filename_list[0]
+    # 保存文件
+    file.save(temp_file_path)
+    # 返回图像URL
+    img_url = request.host_url + filename + ".png"
+    print("img_url:", img_url)
+    # 返回url和地理位置信息
+    return img_url
 
 
 def import_model(name, model_path):
@@ -236,6 +267,7 @@ def process(methodList, parameters, image_url):
     # 迭代处理图像
     for i in range(length):
         method_type = methodList[i].strip('\'')
+        method_type = method_type.strip(' ')
         method = code_dict[method_type]
         parameter = parameters[i]
         print(method, parameter)
@@ -250,3 +282,110 @@ def process(methodList, parameters, image_url):
     png_file = tif_to_png(result_path)
     # 返回地址
     return request.host_url + png_file
+
+
+# def tif_to_png_(input_tif, output_dir=".", output_prefix="output"):
+# """
+# 使用GDAL读取一个多通道的GeoTIFF图像，转换为PNG格式并保存，
+# 然后返回PNG图像的完整路径。
+#
+# 参数：
+# input_tif (str)：输入的GeoTIFF图像路径
+# output_dir (str, optional)：输出PNG图像的目录，默认为当前目录(".")
+# output_prefix (str, optional)：输出PNG图像的前缀，默认为"output"
+# """
+# print(input_tif)
+# # 打开输入的GeoTIFF文件
+# in_ds = gdal.Open(input_tif, gdal.GA_ReadOnly)
+# if in_ds is None:
+#     print("path is error")
+#     return 0
+#
+# # 获取图像的列数和行数
+# cols = in_ds.RasterXSize
+# rows = in_ds.RasterYSize
+#
+# # 确保输入图像有三个波段（RGB）
+# if in_ds.RasterCount != 3:
+#     raise ValueError("Input TIF should have 3 bands (RGB).")
+#
+# # 创建输出PNG文件名
+# output_png = os.path.join(output_dir, f"{output_prefix}.png")
+#
+# # 创建PNG输出文件的驱动
+# drv = gdal.GetDriverByName('PNG')
+#
+# # 创建PNG数据集
+# try:
+#     out_ds = drv.Create(output_png, cols, rows, 3, gdal.GDT_Byte)
+# except Exception as e:
+#     raise Exception(f"Failed to create PNG file: {output_png}. Error: {e}")
+#
+#     # 确保创建PNG数据集成功
+# if out_ds is None:
+#     raise Exception(f"Failed to create PNG file: {output_png}")
+#
+# # 读取并写入每个波段的数据
+# for band_idx in range(1, 4):  # GDAL波段编号从1开始
+#     in_band = in_ds.GetRasterBand(band_idx)
+#     out_band = out_ds.GetRasterBand(band_idx - 1)  # PNG波段编号从0开始
+#     array = in_band.ReadAsArray()
+#     out_band.WriteArray(array, 0, 0)
+#
+# # 关闭数据集
+# out_band.FlushCache()
+# out_ds = None
+# in_ds = None
+#
+# # 返回PNG图像的保存路径
+# return output_png
+
+def tif_to_png_(tif_path, output_name):
+    try:
+        print("tifPath:", tif_path)
+        # 打开tif图像
+        dataset = gdal.Open(tif_path)
+        if dataset is None:
+            raise Exception("无法打开tif文件")
+
+        # 获取tif图像的驱动和数据
+        driver = gdal.GetDriverByName('PNG')
+        file_name = match_image(tif_path)
+        print("filename:", file_name)
+        out_path = "static/image/" + file_name + ".png"
+        # out_path = join(dirname(abspath(tif_path)), output_name + '.png')
+
+        # 创建输出图像
+        out_dataset = driver.CreateCopy(out_path, dataset, strict=0)
+        if out_dataset is None:
+            raise Exception("无法创建png文件")
+
+        # 关闭数据集
+        out_dataset = None
+        dataset = None
+
+        return out_path
+
+    except Exception as e:
+        print("发生错误：", e)
+        return None
+
+
+# 用于统计像素情况
+def sum_rgb(class_list, rgb_list, path):
+    colormap = np.array(rgb_list)
+    image = Image.open(path)
+    image_data = np.array(image)
+    classNum = len(class_list)
+    # 初始化计数器
+    class_counts = {class_name: 0 for class_name in class_list}
+    # 遍历图像数据，统计每个类的数量
+    for row in image_data:
+        for pixel in row:
+            # 查找匹配的颜色
+            matched_class = np.where((colormap == pixel).all(axis=1))
+            if len(matched_class[0]) > 0:
+                class_index = matched_class[0][0]
+                class_name = class_list[class_index]
+                class_counts[class_name] += 1
+    return class_counts

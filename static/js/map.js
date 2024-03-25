@@ -265,13 +265,13 @@ function getTree() {
             ]
           },
           {
-            text: "Sub Node 2",
+            text: "osm",
              icon: "fa fa-folder"
           }
         ]
       },
       {
-        text: "Node 2",
+        text: "数据图层",
         icon: "fa fa-folder"
       },
     ];
@@ -322,7 +322,7 @@ async function textProcess(string, url) {
     // 打印处理后的字符串
     console.log(result.resultUrl);
     // 返回处理后的字符串
-    return result.resultUrl;
+    return {"resultUrl":result.resultUrl,"process":result.process,"parameters":result.parameters};
   } catch (error) {
     // 处理错误
     console.error('Error sending string to backend:', error);
@@ -344,10 +344,30 @@ document.addEventListener('DOMContentLoaded', (event) => {
   // 加载图案显示
   //const spinner = document.getElementById('spinner1');
   // 调用函数并传递一个字符串
-  textProcess(text, tifUrl).then(resultUrl => {
-        console.log('Processed string:', resultUrl);
-        uploadImage(resultUrl, 'resultImage');
-        //spinner.style.display = 'none'; // 加载完成后隐藏图案
+  textProcess(text, tifUrl).then(result => {
+      let resultUrl = result.resultUrl
+      let operations = result.process
+      let params = result.parameters
+      console.log('Process:', operations)
+      console.log('Parameters:', params)
+      console.log('Processed string:', resultUrl);
+      uploadImage(resultUrl, 'resultImage');
+      //spinner.style.display = 'none'; // 加载完成后隐藏图案
+      let tableBody  = document.getElementById("myTable")
+      operations.forEach((operation, index) => {
+            const row = document.createElement("tr");
+            const cellOperation = document.createElement("td");
+            const cellParam = document.createElement("td");
+
+            cellOperation.textContent = operation;
+            cellParam.textContent = params[index];
+
+            row.appendChild(cellOperation);
+            row.appendChild(cellParam);
+            tableBody.appendChild(row);
+        });
+
+
       }).catch(error => {
         console.error('Error sending string to backend:', error);
         //spinner.style.display = 'none'; // 加载完成后隐藏图案
@@ -355,10 +375,5 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 });
 
-/// <!-- 按钮放在左侧 -->
-//                                                         <button class="btn btn-primary" type="button" disabled>
-//                                                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-//                                                         Loading...
-//                                                         </button>
 
 

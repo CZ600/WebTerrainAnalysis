@@ -1,0 +1,71 @@
+{% extends "recognition.html" %}
+
+{% block style_mode %}
+
+{% endblock %}
+
+{% block main_content %}
+    <div class="row m-lg-2">
+        <div class="col-md-4">
+          <div class="card" style="width: 100%;">
+            <img src="static/喜马拉雅山.jpg" class="card-img-top1" alt="..." id="near-infrared">
+            <div class="card-body">
+              <h5 class="card-title">近红外通道</h5>
+              <p class="card-text">请选择一幅近红外通道影像</p>
+                <div class="form-group" id="formGroup1">
+                    <input class="form-control form-control-sm mt-1 mb-3" type="file" id="imageInput1" >
+                    <a href="#" class="btn btn-light" id="upload1">确认</a>
+                </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <!-- 重复上述card结构 -->
+          <div class="card" style="width: 100%;">
+            <img src="static/帕奎埃.jpg" class="card-img-top2" alt="..." id = "DEMImage">
+            <div class="card-body">
+              <h5 class="card-title">DEM</h5>
+              <p class="card-text">请选择一幅DEM影像</p>
+              <input class="form-control form-control-sm mt-1 mb-3" type="file" id="imageInput2" >
+              <a href="#" class="btn btn-light" id="upload2">确认</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <!-- 重复上述card结构 -->
+          <div class="card" style="width: 100%;">
+            <img src="static/新西兰库克山.jpg" class="card-img-top3" alt="..." id="slopeImage">
+            <div class="card-body">
+              <h5 class="card-title">坡度</h5>
+              <p class="card-text">请选择一幅坡度影像</p>
+                <div class="form-group" id="formGroup1">
+                    <input class="form-control form-control-sm mt-1 mb-3" type="file" id="imageInput3" >
+                    <a href="#" class="btn btn-light" id="upload3">确认</a>
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+    <div class="row m-lg-2">
+        <div class="card m-lg-1 mr-4">
+            <div class="row m-lg-1 mr-1">
+                <div class = "col-md-5">
+                    <div class="col-xs-12 card-body">
+                        <img src="static/新西兰库克山.jpg" class="img-thumbnail" style="height: 400px" id="111">
+                    </div>
+                </div>
+                <div class = " col-xs-12 col-md-6">
+                    <div class="row-cols-2 mt-3">
+                        <button class="btn btn-light mt-2 mb-2" id="startButton"> 开始运行 </button>
+                        <h4>多模态分析结果：</h4>
+                    </div>
+                    <div class="row-cols-2 mt-2">
+                        <div class="row-cols-2 mt-2" id="result_table_Rgb">
+                            <div class="echart"  id="chart1" style="width: 600px;height:400px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -94,33 +94,47 @@
                                     <div class = "row">
                                             <div class="col-4">
                                                 <div class="col-sm">
-                                                <figure class="text-center">
-                                                    <figcaption class="blockquote-footer">
-                                                        智能处理
-                                                    </figcaption>
-                                                </figure>
+                                                    <figure class="text-center">
+                                                        <figcaption class="blockquote-footer">
+                                                            智能处理
+                                                        </figcaption>
+                                                    </figure>
                                                 </div>
                                                 <div class="form-floating">
                                                     <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 300px" ></textarea>
                                                     <label for="floatingTextarea2">输入处理需求</label>
                                                 </div>
-                                                <div class="row mt-1">
+                                                <div class="row mt-2 mb-2">
                                                     <div class="col">
                                                       <!-- 在同一行上放置按钮和加载图标 -->
                                                       <div class="d-inline-block" style="width:calc(100% - 40px); display:inline-block;">
-                                                          <button class="btn btn-primary" type="button" id="textSubmit">提交</button>
-
+                                                          <button class="btn btn-primary mt-2" type="button" id="textSubmit">提交</button>
                                                       </div>
-{#                                                      <!-- 加载图标放在右侧 -->#}
-{#                                                      <div class="spinner-border text-primary float-right mt-2" role="status">#}
-{#                                                        <span class="sr-only" id="spinner1"></span>#}
-{#                                                      </div>#}
+
+
                                                     </div>
                                                 </div>
-                                        </div>
-                                        <div class="col-8">
-                                            <div class="row gy-5">
-                                        <div class="col-sm">
+                                                <div class="row mt -4 mr-2">
+                                                    <div class="row-cols-1">
+                                                        <div class="card-body " >
+                                                            <table id="myTable" class="table table-striped ">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>操作名称</th>
+                                                                        <th>参数</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <!-- 表格数据将通过 JavaScript 动态插入 -->
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-8">
+                                                <div class="row gy-5">
+                                            <div class="col-sm">
                                             <figure class="text-center">
                                                 <figcaption class="blockquote-footer">
                                                     原始图片
@@ -139,15 +153,10 @@
                                     </div>
                                     <div class="row mt-3">
                                         <div class="p-3 border bg-light">
-                                            <div class="card">
-                                                <div class="card-body">
                                                     <h6 class="card-subtitle mb-2 text-muted">处理流程：</h6>
                                                     <div class="row" id = "processList">
                                                         <div class = "container mt-1" id="processStream"></div>
-
                                                     </div>
-                                                </div>
-                                            </div>
                                         </div>
                                       </div>
                                       <div class="row mt-3">
