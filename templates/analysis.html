@@ -2,71 +2,119 @@
 {% block style_mode %}
 
 {% endblock %}
-{% block maincontent %}
-    <div class="row m-lg-2">
-        <div class="col-md-4">
-          <div class="card" style="width: 100%;">
-            <img src="static/喜马拉雅山.jpg" class="card-img-top1" alt="..." id="near-infrared">
-            <div class="card-body">
-              <h5 class="card-title">近红外通道</h5>
-              <p class="card-text">请选择一幅近红外通道影像</p>
-                <div class="form-group" id="formGroup1">
-                    <input class="form-control form-control-sm mt-1 mb-3" type="file" id="imageInput1" >
-                    <a href="#" class="btn btn-light" id="upload1">确认</a>
-                </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <!-- 重复上述card结构 -->
-          <div class="card" style="width: 100%;">
-            <img src="static/帕奎埃.jpg" class="card-img-top2" alt="..." id = "DEMImage">
-            <div class="card-body">
-              <h5 class="card-title">DEM</h5>
-              <p class="card-text">请选择一幅DEM影像</p>
-              <input class="form-control form-control-sm mt-1 mb-3" type="file" id="imageInput2" >
-              <a href="#" class="btn btn-light" id="upload2">确认</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <!-- 重复上述card结构 -->
-          <div class="card" style="width: 100%;">
-            <img src="static/新西兰库克山.jpg" class="card-img-top3" alt="..." id="slopeImage">
-            <div class="card-body">
-              <h5 class="card-title">坡度</h5>
-              <p class="card-text">请选择一幅坡度影像</p>
-                <div class="form-group" id="formGroup1">
-                    <input class="form-control form-control-sm mt-1 mb-3" type="file" id="imageInput3" >
-                    <a href="#" class="btn btn-light" id="upload3">确认</a>
-                </div>
-            </div>
-          </div>
-        </div>
-    </div>
-    <div class="row m-lg-2">
-        <div class="card m-lg-1 mr-4">
-            <div class="row m-lg-1 mr-1">
-                <div class = "col-md-5">
-                    <div class="col-xs-12 card-body">
-                        <img src="static/新西兰库克山.jpg" class="img-thumbnail" style="height: 400px" id="111">
+{% block main_content %}
+    <div class="container">
+        <div class="row ">
+             <!-- 第一列 -->
+            <div class="col-md-4 mt-2">
+                <!-- 第一个 card -->
+                <div class="card mb-4">
+                   <img src="/static/新西兰库克山.jpg" class="card-img-top " style="height:270px;width:100%"  alt="..." id="imageTerrainRecognition">
+                    <div class="card-body text-center">
+                        <p class="card-text">地形识别图像</p>
+                    </div>
+                    <div class="form-group mx-3 mb-2" id="formGroup1">
+                        <input class="form-control form-control-sm mt-1 mb-2" type="file" id="imageInputMultimode" >
+                        <a href="#" class="btn btn-light" id="upload5">提交图像</a>
                     </div>
                 </div>
-                <div class = " col-xs-12 col-md-6">
-                    <div class="row-cols-2 mt-3">
-                        <button class="btn btn-light mt-2 mb-2" id="startButton"> 开始运行 </button>
-                        <h4>多模态分析结果：</h4>
+                <!-- 第二个 card -->
+                <div class="card">
+                    <img src="/static/喜马拉雅山.jpg" class="card-img-top" style="height:270px;width:100%"  id="imageClassify">
+                    <div class="card-body text-center">
+                        <p class="card-text">土地利用识别图像</p>
                     </div>
-                    <div class="row-cols-2 mt-2">
-                        <div class="row-cols-2 mt-2" id="result_table_Rgb">
-                            <div class="echart"  id="chart1" style="width: 600px;height:400px;">
+                    <div class="form-group mx-3 mb-2" id="formGroup1">
+                        <input class="form-control form-control-sm mt-1 mb-2" type="file" id="imageInputClassify" >
+                        <a href="#" class="btn btn-light" id="upload6">提交图像</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第二列 -->
+            <div class="col-md-4 mt-2">
+                <!-- 第一个 card -->
+                <div class="row-cols-1">
+                    <div class="card mb-4">
+                        <img src="/static/喜马拉雅山.jpg" class="card-img-top" id="resultimage">
+                        <div class="card-body text-center">
+                            <p class="card-text">土地利用识别图像</p>
                         </div>
                     </div>
                 </div>
+
+                <!-- 第二个 card -->
+                <div class="row-cols-1">
+                    <div class="card">
+                         <div class="card-body">
+                             <button class="btn btn-light" id="startAnalysis"> 开始计算 </button>
+                             <div  id="chart1" style="width: 385px;height:507px;"></div>
+                         </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- 第三列 -->
+            <div class="col-md-4 mt-2">
+                <!-- 第一个 card -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div  id="chart2" style="width: 385px;height:382px;"></div>
+                    </div>
+                </div>
+                <!-- 第二个 card -->
+                <div class="card mt-2">
+                    <div class="card-body">
+                        <div   id="chart3" style="width: 385px;height:382px;"></div>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
     </div>
+
+
 {% endblock %}
 {% block import_script %}
 <script src = "/static/js/analysis.js"></script>
 {% endblock %}
+
+{#
+<!-- 左侧列，占据6格 -->
+            <div class="col-md-4 mt-2">
+                <div class="card mb-3">
+
+                </div>
+                <div class="card">
+
+                </div>
+                <button class="btn btn-light mt-2 mb-2 text-center" id="startAnalysis"> 开始运行 </button>
+            </div>
+            <!-- 右侧列，占据6格 -->
+            <div class="col-md-4 mt-2">
+                <div class="card">
+
+                </div>
+                <div class="card mt-2">
+
+                </div>
+            </div>
+            <div class="col-md-4">
+                <!-- 第一个 card -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Card 3-1</h5>
+                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                    </div>
+                </div>
+                <!-- 第二个 card -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Card 3-2</h5>
+                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                    </div>
+                </div>
+            </div>
+
+#}

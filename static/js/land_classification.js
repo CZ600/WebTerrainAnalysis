@@ -134,7 +134,7 @@ function multimodingImageRgb(){
             },
             series: [
                 {
-                    name: '访问来源',
+                    name: '数据：',
                     type: 'pie',
                     radius: '50%',
                     data: dataList,  // 使用数据

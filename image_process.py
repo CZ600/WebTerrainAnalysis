@@ -1,3 +1,4 @@
+import cv2
 from flask import Flask, request, send_file, jsonify
 from PIL import Image
 from io import BytesIO
@@ -8,6 +9,7 @@ from werkzeug.utils import secure_filename
 from scipy import ndimage as ndi
 import re
 from os.path import dirname, abspath, join
+from matplotlib import pyplot as plt
 
 
 # 用于改名
@@ -284,62 +286,6 @@ def process(methodList, parameters, image_url):
     return request.host_url + png_file
 
 
-# def tif_to_png_(input_tif, output_dir=".", output_prefix="output"):
-# """
-# 使用GDAL读取一个多通道的GeoTIFF图像，转换为PNG格式并保存，
-# 然后返回PNG图像的完整路径。
-#
-# 参数：
-# input_tif (str)：输入的GeoTIFF图像路径
-# output_dir (str, optional)：输出PNG图像的目录，默认为当前目录(".")
-# output_prefix (str, optional)：输出PNG图像的前缀，默认为"output"
-# """
-# print(input_tif)
-# # 打开输入的GeoTIFF文件
-# in_ds = gdal.Open(input_tif, gdal.GA_ReadOnly)
-# if in_ds is None:
-#     print("path is error")
-#     return 0
-#
-# # 获取图像的列数和行数
-# cols = in_ds.RasterXSize
-# rows = in_ds.RasterYSize
-#
-# # 确保输入图像有三个波段（RGB）
-# if in_ds.RasterCount != 3:
-#     raise ValueError("Input TIF should have 3 bands (RGB).")
-#
-# # 创建输出PNG文件名
-# output_png = os.path.join(output_dir, f"{output_prefix}.png")
-#
-# # 创建PNG输出文件的驱动
-# drv = gdal.GetDriverByName('PNG')
-#
-# # 创建PNG数据集
-# try:
-#     out_ds = drv.Create(output_png, cols, rows, 3, gdal.GDT_Byte)
-# except Exception as e:
-#     raise Exception(f"Failed to create PNG file: {output_png}. Error: {e}")
-#
-#     # 确保创建PNG数据集成功
-# if out_ds is None:
-#     raise Exception(f"Failed to create PNG file: {output_png}")
-#
-# # 读取并写入每个波段的数据
-# for band_idx in range(1, 4):  # GDAL波段编号从1开始
-#     in_band = in_ds.GetRasterBand(band_idx)
-#     out_band = out_ds.GetRasterBand(band_idx - 1)  # PNG波段编号从0开始
-#     array = in_band.ReadAsArray()
-#     out_band.WriteArray(array, 0, 0)
-#
-# # 关闭数据集
-# out_band.FlushCache()
-# out_ds = None
-# in_ds = None
-#
-# # 返回PNG图像的保存路径
-# return output_png
-
 def tif_to_png_(tif_path, output_name):
     try:
         print("tifPath:", tif_path)
@@ -376,6 +322,7 @@ def sum_rgb(class_list, rgb_list, path):
     colormap = np.array(rgb_list)
     image = Image.open(path)
     image_data = np.array(image)
+    print(image_data)
     classNum = len(class_list)
     # 初始化计数器
     class_counts = {class_name: 0 for class_name in class_list}
@@ -389,3 +336,58 @@ def sum_rgb(class_list, rgb_list, path):
                 class_name = class_list[class_index]
                 class_counts[class_name] += 1
     return class_counts
+
+
+# pixel1 是 地形识别结果，Pixel2是土地利用分类结果,返回叠置分析结果
+# 示例数据：pixel1 = [0,0,0] pixel2 = [100,100,100]
+def judge(pixel1, pixel2):
+    # 将输入的像素值转换为NumPy数组
+    pixel1 = np.array(pixel1, dtype=np.uint8)
+    pixel2 = np.array(pixel2, dtype=np.uint8)
+
+    # 冰川谷地 或森林 不适合开发
+    if (pixel1 == [255, 255, 255]).all() or (pixel2 == [34, 139, 34]).all():
+        return [0, 0, 255]
+    # 水体，进行或运算
+    elif (pixel1 == [192, 64, 128]).all() or (pixel1 == [0, 0, 255]).all():
+        return [192, 64, 128]
+    # 建筑物，道路已经被开发利用
+    elif (pixel2 == [180, 30, 30]).all() or (pixel2 == [100, 100, 100]).all():
+        return [180, 30, 30]
+    # 未知
+    elif (pixel2 == [0, 0, 0]).all() and (pixel1 == [0, 0, 0]).all():
+        return [0, 0, 0]
+    # 可以利用土地 包括 贫瘠地区，农田
+    elif (pixel2 == [220, 220, 220]).all() or (pixel2 == [255, 215, 0]).all():
+        return [220, 220, 220]
+    # 其他
+    else:
+        return [255, 192, 203]
+
+
+def overlay_analysis(image_url1, image_url2):
+    image1 = cv2.imread(image_url1)
+    image2 = cv2.imread(image_url2)
+    # 将image1和image转换为np数组
+    image1 = np.array(image1)
+    image2 = np.array(image2)
+    print("image1:",image1)
+    print("image2:",image2)
+    # 对数组进行叠置分析
+    x, y, z = image1.shape
+    # 创建一个与image1相同大小的数组
+    result = np.zeros((x, y, 3), dtype=np.uint8)
+    for i in range(x):
+        for j in range(y):
+            pixel = judge(image1[i, j], image2[i, j])
+            result[i, j] = pixel
+    # 将结果保存为图像
+    result_url = "static/image/result/result_overlay.png"
+    # 使用matplotlib显示图像
+    plt.figure()
+    # 添加颜色条（可选）
+    plt.imshow(result)
+    plt.show()
+    cv2.imwrite(result_url, result)
+
+    return result_url

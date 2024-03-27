@@ -20,7 +20,7 @@ let overviewMapControl = new ol.control.OverviewMap({
     });
 
 // 定义一个ol地图
-var map = new ol.Map({
+let map = new ol.Map({
     target: 'map',
     layers: [
         new ol.layer.Tile({
@@ -146,6 +146,7 @@ function uploadFile() {
             })
           })
         )
+        console.log("mapLayers:",map.getLayers());
         console.log('File uploaded successfully');
         console.log(location)
 

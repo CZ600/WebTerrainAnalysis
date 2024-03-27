@@ -70,6 +70,11 @@ def land_classification():
 def analysis():
     return flask.render_template("analysis.html")
 
+# sam标注界面
+@app.route("/label", methods=['GET', 'POST'])
+@cross_origin("*")
+def label():
+    return flask.render_template("label.html")
 
 # 顶部导航栏
 @app.route("/header")
@@ -244,12 +249,27 @@ def classify():
     print("loacal:", base_url)
     classes = ["None", "Background", "Building", "Road", "Water", "Barren", "Forest", "Agriculture"]
     colormap = [[0, 0, 0], [255, 255, 255], [180, 30, 30], [100, 100, 100], [0, 0, 255], [220, 220, 220],
-                [34, 139, 34], [255, 215, 0],
-                ]
+                [34, 139, 34], [255, 215, 0]]
     temp_url = see_RGB.split_and_reconstruct_rgb(base_url, (512, 512), 128, 'unet_x')
     predict_image = request.host_url + temp_url
     result_dict = sum_rgb(classes, colormap, temp_url)  # 统计预测结果图像的数据分布方法
     return jsonify({'resultUrl': predict_image, "sum_dict": result_dict})
+
+
+@app.route("/overlayAnalysis", methods=['GET', "POST"])
+@cross_origin("*")
+def overlayAnalysis():
+    multimoding_url = request.json.get("multimodingUrl")
+    classify_url = request.json.get("classifyUrl")
+    multimoding_url = re.sub(r'http://127.0.0.1:8000/', '', multimoding_url)
+    classify_url = re.sub(r'http://127.0.0.1:8000/', '', classify_url)
+    print("multimoding_url:", multimoding_url, "classify_url:", classify_url)
+    return_url = overlay_analysis(multimoding_url, classify_url)
+    result_path = request.host_url + return_url
+    classes = ["不适宜开发", "水体", "已经建设利用土地", "未知", "可开发土地", "其他"]
+    colormap = [[255, 0, 0], [128, 64,192 ], [30, 30, 180], [0, 0, 0], [220, 220, 220], [203, 192,255 ]]
+    class_count = sum_rgb(classes, colormap, return_url)
+    return jsonify({'resultUrl': result_path, "class_count": class_count})
 
 
 # 启动Flask应用程序
