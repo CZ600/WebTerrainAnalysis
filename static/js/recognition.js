@@ -173,10 +173,44 @@ function multimodingImage(){
       console.error('Promise error:', error);
     });
 }
-
+// 开始运行
 startButton = document.getElementById("startButton")
 startButton.addEventListener("click", function (){
     multimodingImage()
+})
+
+
+// 将数据显示到地图上
+let mapButton = document.getElementById("mapButton")
+mapButton.addEventListener("click", function (){
+    let image = document.getElementById("111")
+    let input = document.getElementById("InputLocation")
+     let location
+    if(input.value.trim().length ===0 ){
+
+        location = 0
+    }
+    else {
+        location = input.value
+    }
+    let url = image.src
+    console.log("url:",url)
+    fetch('/map_show', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({'url': url,'location':location})
+            })
+            .then(data => {
+                console.log('Success:', data)
+
+                console.log('Redirecting to:', data.redirected)
+                window.location.href = '/map2'; // 跳转到重定向URL
+
+            })
+            .catch(error => console.error('Error:', error));
+
 })
 
 

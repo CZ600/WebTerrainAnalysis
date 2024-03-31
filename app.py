@@ -1,5 +1,7 @@
 from flask import Flask, request, send_file, jsonify
 import flask
+import base64
+# from sam.the_sam_Max import *
 from flask_bootstrap import Bootstrap5
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
@@ -13,10 +15,18 @@ from image_merge import align_images
 from osgeo import gdal
 from X import predict, see_RGB
 import re
+from mobile_sam import *
+
+location = []
+point_x = []
+point_y = []
+labels = []
+po_ne = [1]
 
 # sk-ac7bd32e53284528855a5f03347a4e7c
 
 app = Flask(__name__)
+app.secret_key = '3.1415926535897932'
 bootstrap = Bootstrap5(app)
 
 # 路由
@@ -30,10 +40,36 @@ def index():  # put application's code here
 
 
 # 地图页面
-@app.route("/map", methods=['GET', 'POST'])
+@app.route("/map")
 @cross_origin("*")  # 允许跨域请求
 def map():
-    return flask.render_template("map.html")
+    return flask.render_template("map.html", imageUrl=request.host_url + "/static/喜马拉雅山.jpg",
+                                 location=[11324268.960713115, 3438648.608765711, 11371312.459048243,
+                                           3488080.7755635544])
+
+
+@app.route("/map2")
+@cross_origin("*")
+def map2():
+    if flask.session.get("image_url"):
+        print("image_url:", flask.session.get("image_url"))
+        imageUrl = flask.session.get("image_url")
+        location = flask.session.get("location")
+        print("get the image:", imageUrl, location)
+        for key in list(flask.session.keys()):
+            del flask.session[key]
+        return flask.render_template("map.html", imageUrl=imageUrl, location=location, bool="a")
+    else:
+        imageUrl = request.host_url + "/" + "static/雪山天空.jpg"
+        if flask.session.get("location") != []:
+            location = flask.session.get("location")
+        else:
+            location = [0, 0, 0, 0]
+        print("no image:", imageUrl, location)
+        for key in list(flask.session.keys()):
+            del flask.session[key]
+        # return flask.render_template("map.html", imageUrl=imageUrl, location=location)
+        return flask.render_template("map.html", imageUrl=imageUrl, location=location, bool="b")
 
 
 # 智能问答界面
@@ -70,11 +106,13 @@ def land_classification():
 def analysis():
     return flask.render_template("analysis.html")
 
+
 # sam标注界面
 @app.route("/label", methods=['GET', 'POST'])
 @cross_origin("*")
 def label():
     return flask.render_template("label.html")
+
 
 # 顶部导航栏
 @app.route("/header")
@@ -100,7 +138,8 @@ def upload():
             file = request.files['file']
             # 调用图像处理函数处理,获取图像的url和图像的坐标数据
             img_url, location_data = image_load(file)
-
+            global location
+            location = location_data
             return jsonify({'url': img_url, 'location': location_data})
 
     except Exception as e:
@@ -122,12 +161,29 @@ def upload_RGB():
             file = request.files['file']
             # 调用图像处理函数处理,获取图像的url和图像的坐标数据
             img_url = image_load_RGB(file)
-
             return jsonify({'url': img_url})
 
     except Exception as e:
         print(e)
         return 'Internal server error', 500
+
+
+# 地图显示
+@app.route("/map_show", methods=['GET', 'POST'])
+@cross_origin("*")
+def map_show():
+    image_url = request.json.get('url')
+    # 将图像 URL 存储在会话中
+    flask.session['image_url'] = image_url
+    if 'location' in request.json:
+        flask.session['location'] = request.json.get('location')
+    else:
+        # 假设 location 是一个全局变量或已经定义的会话变量
+        flask.session['location'] = location
+    # 重定向到新的网页，并传递图像 URL
+    print(flask.session['image_url'])
+    print(flask.session['location'])
+    return jsonify({'status': 'success'})
 
 
 # 处理图像预处理请求
@@ -152,6 +208,16 @@ def preprocessing():
 conversation_history = [{'role': Role.SYSTEM,
                          'content': 'If any questions are asked about identity, remember who you are: you are a big model of artificial intelligence focused on solving problems in the geographic sciences. '
                                     'You will answer questions about geography objectively and scientifically.'}]
+
+
+# 下载图像请求
+@app.route("/download_image/<string:imageName>", methods=['GET', 'POST'])
+@cross_origin("*")
+def download_image(imageName):
+    # 指定要下载的图像文件的路径
+    image_path = request.host_url + "static/images/" + imageName
+    # 使用send_file函数来发送文件
+    return send_file(image_path, as_attachment=True)
 
 
 # 语义解析
@@ -247,7 +313,7 @@ def classify():
     print("imageUrl:", image_url)
     base_url = re.sub(r'http://127.0.0.1:8000/', '', image_url)
     print("loacal:", base_url)
-    classes = ["None", "Background", "Building", "Road", "Water", "Barren", "Forest", "Agriculture"]
+    classes = ["未知", "背景值", "建设用地", "道路", "水体", "高山草甸", "森林", "农业"]
     colormap = [[0, 0, 0], [255, 255, 255], [180, 30, 30], [100, 100, 100], [0, 0, 255], [220, 220, 220],
                 [34, 139, 34], [255, 215, 0]]
     temp_url = see_RGB.split_and_reconstruct_rgb(base_url, (512, 512), 128, 'unet_x')
@@ -265,11 +331,91 @@ def overlayAnalysis():
     classify_url = re.sub(r'http://127.0.0.1:8000/', '', classify_url)
     print("multimoding_url:", multimoding_url, "classify_url:", classify_url)
     return_url = overlay_analysis(multimoding_url, classify_url)
-    result_path = request.host_url + return_url
-    classes = ["不适宜开发", "水体", "已经建设利用土地", "未知", "可开发土地", "其他"]
-    colormap = [[255, 0, 0], [128, 64,192 ], [30, 30, 180], [0, 0, 0], [220, 220, 220], [203, 192,255 ]]
+    # result_path = request.host_url + return_url
+    result_path = "http://127.0.0.1:8000/static/image/result/classification_result.png"
+    classes = ["不适宜开发", "水体", "已经建设利用土地", "未知", "高山草甸", "其他"]
+    colormap = [[255, 0, 0], [128, 64, 192], [30, 30, 180], [0, 0, 0], [220, 220, 220], [203, 192, 255]]
     class_count = sum_rgb(classes, colormap, return_url)
     return jsonify({'resultUrl': result_path, "class_count": class_count})
+
+
+# 绘图窗口请求
+@app.route("/showImage", methods=['GET', "POST"])
+@cross_origin("*")
+def show_image():
+    # 这里假设你的图片位于static/images/myimage.jpg
+    global location
+    location = request.json.get("location")
+    url = request.json.get("url")
+
+    return flask.render_template('index.html', imageUrl=url, location=location)
+
+
+@app.route('/get_pixel_coordinates', methods=['POST'])
+def handle_click_coordinates():
+    data = request.get_json()
+    point_x0 = data.get('point_x')
+    point_y0 = data.get('point_y')
+
+    point_x.append(point_x0)
+    point_y.append(point_y0)
+    labels.append(po_ne[-1])
+    # 在这里你可以处理接收到的坐标，比如存储或进一步处理
+    print(f"Received coordinates: ({point_x0}, {point_y0}, {po_ne[-1]})")
+
+    # 示例响应，实际应用中可能需要返回JSON或其他格式的数据
+    return '', 204  # 返回HTTP状态码204表示成功处理请求但没有内容返回
+
+
+@app.route('/send_int_value', methods=['POST'])
+def receive_int_value():
+    data = request.get_json()
+    y_n = data.get('value')
+    po_ne.append(y_n)
+    print("Received integer value:", y_n)
+    # 在这里可以根据接收到的整数值进行相应的处理
+    return '', 204
+
+
+@app.route('/finish_sending_points', methods=['POST'])
+def finish_sending_points():
+    data = request.get_json()  # 获取JSON数据
+    image_url = data['image_url']  # 获取图像URL
+    print(point_x)  # 在此处执行你想停止操作的函数或打印语句
+    tmp = list(zip(point_x, point_y))
+    label = [1] * len(tmp)
+    print(tmp)
+    print(labels)
+    path = sam_predict(image_url, tmp, label, "D:/project/html/mapbox/flaskProject/static/image/result/sam")
+    # path = sam_atuo_split(image_url)
+    point_x.clear()
+    point_y.clear()
+    po_ne.clear()
+    po_ne.append(1)
+    print("label Finish!____________________ ")
+    path = request.host_url + path
+    print(path)
+    # return '', 204  # 返回HTTP状态码204表示成功处理请求但没有内容返回
+    return jsonify({'path': path})
+
+
+@app.route('/auto_signal', methods=['POST'])
+def auto_sam():
+    print("Auto Sam Start")  # 在此处执行你想停止操作的函数或打印语句
+    data = request.get_json()  # 获取JSON数据
+    image_url = data['image_url']  # 获取图像URL
+    print(image_url)
+    path = sam_auto_pr(image_path=image_url, save_path="D:/project/html/mapbox/flaskProject/static/image/result/sam")
+    print(path)
+    point_x.clear()
+    point_y.clear()
+    po_ne.clear()
+    po_ne.append(1)
+    print("Auto Finish!____________________________ ")
+    path_result = request.host_url + path
+    print(path_result)
+    # return '', 204  # 返回HTTP状态码204表示成功处理请求但没有内容返回
+    return jsonify({'path': path_result})
 
 
 # 启动Flask应用程序

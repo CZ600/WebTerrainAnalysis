@@ -1,39 +1,55 @@
 # 导入必要的库函数
+import io
+import os
+import matplotlib.colors as mcolors
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import cv2
-from mobile_sam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
+from sam.mobileSam import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
+from PIL import Image, ImageDraw
+from json import *
+from flask import Flask, request, send_file, jsonify
+
+plt.ioff()  # 禁用interactive mode
 
 
 # 定义可视化函数
-def show_mask(mask, ax, random_color=False):
+def show_mask(img_array, mask, random_color=False):
+    # 定义掩膜颜色
     if random_color:
-        color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
+        color = np.random.randint(0, 256, 3)
     else:
-        color = np.array([30 / 255, 144 / 255, 255 / 255, 0.6])
-    h, w = mask.shape[-2:]
-    mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
-    ax.imshow(mask_image)
+        color = (255, 255, 255)  # 红色
+
+    # 将掩膜应用到图像上
+    masked_img = img_array.copy()
+    masked_img[mask == 1] = color
+
+    # Overlay mask on image
+    overlaid_img = cv2.addWeighted(img_array.astype(np.uint8), 1, masked_img.astype(np.uint8), 1, 0)
+
+    return overlaid_img
 
 
-def show_points(coords, labels, ax, marker_size=375):
-    pos_points = coords[labels == 1]
-    neg_points = coords[labels == 0]
-    ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white',
-               linewidth=1.25)
-    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white',
-               linewidth=1.25)
+def show_points(image, coords, labels):
+    for i, element in enumerate(coords):
+        IN = labels[i]
+        # 定义标记点的颜色和半径
+        color = (0, 255, 0)  # 绿色
+        radius = 5  # 半径大小
+        # 绘制标记点
+        cv2.circle(image, element, radius, color, -1)  # 最后一个参数-1表示填充圆圈
 
 
-def sam_point_split(image_pth, point_list, label_list):
+def save_mask_overlay(image_pth, point_list, label_list, output_dir="static/image/result/"):
     """
     适用于取点分割
     """
     # 显示一个机场的影像
     # image = cv2.imread('./test/test.jpg')
-    image = cv2.imread(image_pth)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image0 = cv2.imread(image_pth)
+    image = cv2.cvtColor(image0, cv2.COLOR_BGR2RGB)
 
     # input_point = [[161.68633534, 72.98191204], [877.04076261, 201.13987133]]
     input_point = point_list
@@ -44,7 +60,7 @@ def sam_point_split(image_pth, point_list, label_list):
     input_label = np.array(input_label)
     '''例如[0,1]，0为负类，1为正类'''
     # load模型文件，定义预测模型为Sampredictor即交互式预测
-    sam_checkpoint = "./weights/sam_vit_h_4b8939.pth"
+    sam_checkpoint = "./SegmentAnything/weights/mobile_sam.pt"
     model_type = "vit_h"  # sam
 
     """
@@ -63,45 +79,72 @@ def sam_point_split(image_pth, point_list, label_list):
         point_labels=input_label,
         multimask_output=True, )
 
-    plt.figure(figsize=(20, 15))
+    # plt.figure(figsize=(20, 15))
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     for i, (mask, score) in enumerate(zip(masks, scores)):
-        plt.subplot(1, 3, i + 1)
-        plt.imshow(image)
-        show_mask(mask, plt.gca())
-        show_points(input_point, input_label, plt.gca())
-        plt.title(f"Mask {i + 1}, Score: {score:.3f}", fontsize=18)
-        plt.axis('off')
-    plt.show()
+        # plt.figure(figsize=(10, 10))  # 调整figure大小以适应子图
+        '''plt.subplot(1, 3, i + 1)
+        plt.imshow(image)'''
+        pic = show_mask(image0, mask)
+        # show_points(input_point, input_label, plt.gca())
+        # plt.title(f"Mask {i + 1}, Score: {score:.3f}", fontsize=18)
+        '''plt.axis('off')
+
+        # 将matplotlib Figure转换为RGB格式的numpy数组
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=300, bbox_inches='tight', pad_inches=0)
+        buffer.seek(0)
+        pil_image = Image.open(buffer)'''
+        # OpenCV中的颜色顺序是BGR(A)，所以我们需要先将其转换为BGRA
+        # bgra_matrix = pic[..., [2, 1, 0, 3]]  # 交换R和B通道的位置
+        # 将PIL Image保存为PNG文件
+        output_file_path = os.path.join(output_dir, f"mask_{i + 1}.png")
+        cv2.imwrite(output_file_path, pic)
+        return output_file_path
+        # pic.save(output_file_path)
 
 
 # 实例分割的掩膜是由多个多边形组成的，可以通过下面的函数将掩膜显示在图片上
-def show_anns(anns):
-    if len(anns) == 0:
-        return
-    sorted_anns = sorted(anns, key=(lambda x: x['area']), reverse=True)
-    ax = plt.gca()
-    ax.set_autoscale_on(False)
-    polygons = []
-    color = []
-    for ann in sorted_anns:
-        m = ann['segmentation']
-        img = np.ones((m.shape[0], m.shape[1], 3))
-        color_mask = np.random.random((1, 3)).tolist()[0]
-        for i in range(3):
-            img[:, :, i] = color_mask[i]
-        ax.imshow(np.dstack((img, m * 0.35)))
+def show_anns(image, masks):
+    if len(masks) == 0:
+        return image
+
+    sorted_masks = sorted(masks, key=lambda x: np.sum(x['segmentation']), reverse=True)
+    overlay = image.copy()
+
+    for mask_dict in sorted_masks:
+        mask = mask_dict['segmentation']
+        color_mask = np.random.randint(0, 256, 3)  # 随机生成颜色
+        color_mask = color_mask.astype(np.uint8)
+        overlay[mask == 1] = color_mask
+
+    # Overlay mask on image
+    overlaid_img = cv2.addWeighted(image.astype(np.uint8), 1, overlay.astype(np.uint8), 0.6, 0)
+    return overlaid_img
 
 
-def sam_atuo_split(image_pth):
+# atuo_split函数用于对图像进行自动分割
+def sam_atuo_split(image_pth, output_dir="static/image/result/"):
     """
     适用于自主分割
     """
-    image = cv2.imread(image_pth)
+    # 使用split()方法分割URL
+    print(image_pth)
+    parts = image_pth.split('/')
+    path = '/'.join(parts[-2:])
+
+    print(path)
+
+    image = cv2.imread(path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    sam_checkpoint = "./weights/sam_vit_h_4b8939.pth"
-    model_type = "vit_h"  # sam
+    sam_checkpoint ="sam/SegmentAnything/weights/mobile_sam.pt"
+    # model_type = "vit_h"  # sam
+    model_type = "vit_b"
+    # sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     sam.to(device=device)
     mask_generator = SamAutomaticMaskGenerator(sam)
@@ -112,7 +155,17 @@ def sam_atuo_split(image_pth):
     print(len(masks))  # 多边形个数，数值越大，分割粒度越小
     print(masks[0].keys())
 
-    plt.figure(figsize=(10, 10))
+    pic = show_anns(image, masks)
+    output_file_path = os.path.join(output_dir, f"mask_.png")
+    print("outputFilePath:", output_file_path)
+    cv2.imwrite(output_file_path, pic)
+    return output_file_path
+    '''plt.figure(figsize=(10, 10))
     plt.imshow(image)
     show_anns(masks)  # 显示过程较慢
-    plt.show()
+    plt.show()'''
+
+
+'''tmp = [[161.68633534, 72.98191204], [877.04076261, 201.13987133]]
+label = [1, 1]
+save_mask_overlay(r'./SegmentAnything/images/picture1.jpg', tmp, label, output_dir=r'./output')'''

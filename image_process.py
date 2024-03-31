@@ -10,6 +10,7 @@ from scipy import ndimage as ndi
 import re
 from os.path import dirname, abspath, join
 from matplotlib import pyplot as plt
+from dem_tools import dem_analysis
 
 
 # 用于改名
@@ -173,7 +174,7 @@ def calculate_sac(dem, geotransform, id):
 
 
 # 进行图像预处理计算函数
-def image_cal(image, parmater, method):
+def image_cal(image, parmater, method, temp_image, result_image):
     dataset = image
     band = image.GetRasterBand(1)
     img = band.ReadAsArray()
@@ -227,6 +228,26 @@ def image_cal(image, parmater, method):
         aspect = calculate_sac(img, geotransform, method)
         print("计算坡向成功")
         return aspect
+    elif method == 9:
+        dem_analysis.fill_sinks(temp_image, result_image)
+        dataset = gdal.Open(result_image)
+        imageBand = dataset.GetRasterBand(1)
+        fill = imageBand.ReadAsArray()
+        return fill
+    elif method == 9:
+        dem_analysis.calculate_flow_direction(temp_image, result_image)
+        dataset = gdal.Open(result_image)
+        imageBand = dataset.GetRasterBand(1)
+        flow = imageBand.ReadAsArray()
+        return flow
+
+
+
+def white_box(method, inputpath, output_path):
+    if method == 9:
+        dem_analysis.fill_sinks(inputpath, output_path)
+    elif method == 10:
+        dem_analysis.calculate_flow_direction(inputpath, output_path)
 
 
 # 执行图像预处理的函数
@@ -236,7 +257,8 @@ def process(methodList, parameters, image_url):
     print(methodList)
     # 字典用于对于方法与代号
     code_dict = {"高通滤波": 0, "低通滤波": 1, "中值滤波": 2, "线性拉伸": 3, "对数变换": 4, "幂律变换": 5, "坡度": 6,
-                 "曲率": 7, "坡向": 8, "计算坡度": 6, "计算曲率": 7, "计算坡向": 8}
+                 "曲率": 7, "坡向": 8, "计算坡度": 6, "计算曲率": 7, "计算坡向": 8, "填洼": 9, "计算填洼": 9,
+                 "计算流向": 10, "流向": 10}
     # 生成保存图像的路径
     # 使用正则表达式匹配文件名
     match = re.search(r'/static/image/(.*?).tif', image_url)
@@ -250,10 +272,10 @@ def process(methodList, parameters, image_url):
 
     temp_img = "image/" + file_name + ".tif"
     result_path = "static/image/result/" + file_name + "_PreResult.tif"
-    print(result_path)
+    print("result_path", result_path)
 
     # 读取TIFF图像
-    print(temp_img)
+    print("temp_path", temp_img)
     dataset = gdal.Open(temp_img)
     print(dataset)
     band = dataset.GetRasterBand(1)
@@ -273,7 +295,7 @@ def process(methodList, parameters, image_url):
         method = code_dict[method_type]
         parameter = parameters[i]
         print(method, parameter)
-        img = image_cal(dataset, parameter, method)
+        img = image_cal(dataset, parameter, method, temp_img, result_path)
     print("process preProcess image success!")
     # 保存滤波后的图像
     driver = gdal.GetDriverByName('GTiff')
@@ -371,8 +393,8 @@ def overlay_analysis(image_url1, image_url2):
     # 将image1和image转换为np数组
     image1 = np.array(image1)
     image2 = np.array(image2)
-    print("image1:",image1)
-    print("image2:",image2)
+    print("image1:", image1)
+    print("image2:", image2)
     # 对数组进行叠置分析
     x, y, z = image1.shape
     # 创建一个与image1相同大小的数组

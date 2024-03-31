@@ -6,13 +6,13 @@ let overviewMapControl = new ol.control.OverviewMap({
       className: 'ol-overviewmap ol-custom-overviewmap',
       layers: [
         new ol.layer.Tile({
+         title: "高德地图",
           // 使用高德
          source: new ol.source.XYZ({
-                        url: 'https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}&lang=zh_cn&scl=1&sv=7&key=ce2bc8663af5253256250118e9455e5a',
-
-                        crossOrigin: 'anonymous',
-                        attributions: '© 高德地图'
-                    })
+                url: 'https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}&lang=zh_cn&scl=1&sv=7&key=ce2bc8663af5253256250118e9455e5a',
+                crossOrigin: 'anonymous',
+                attributions: '© 高德地图'
+            })
         })
 
       ],
@@ -25,6 +25,7 @@ let map = new ol.Map({
     layers: [
         new ol.layer.Tile({
             source: new ol.source.XYZ({
+                title: "高德地图",
                 url: 'https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}&lang=zh_cn&scl=1&sv=7&key=ce2bc8663af5253256250118e9455e5a', // 高德地图矢量图源URL
                 crossOrigin: 'anonymous',
                 attributions: '© 高德地图'
@@ -32,7 +33,7 @@ let map = new ol.Map({
         })
     ],
     view: new ol.View({
-        center: ol.proj.fromLonLat([116.391275, 39.90765]), // 北京的经纬度坐标
+        center: ol.proj.fromLonLat([100.25, 29.25]), // 北京的经纬度坐标
         projection: 'EPSG:3857',
         zoom: 10 // 地图的初始缩放级别
     }),
@@ -132,14 +133,17 @@ function uploadFile() {
           var imageUrl = data.url; // 从JSON对象中获取URL
           var location = data.location
           imageLocation = location
+          console.log("location:",location)
           console.log(imageUrl);
           raw_png_location = imageUrl
         //var extent = ol.proj.transformExtent([73, 12.2, 135, 54.2], 'EPSG:4326', 'EPSG:3857');
           //var extent = location
           uploadImage(imageUrl, 'rawImage')
+          uploadImage(imageUrl, 'rawImage2')
         map.addLayer(
           new ol.layer.Image({
             source: new ol.source.ImageStatic({
+                title:"数据图层",
                 url: imageUrl,
                 projection: 'EPSG:3857',
                 imageExtent: location //映射到地图的范围
@@ -224,63 +228,6 @@ button_start_imageProcess.addEventListener("click", function () {
         });
 })
 
-
-// 实现树状结构管理图层
-function getTree() {
-  // Some logic to retrieve, or generate tree structure
-        var tree = [
-      {
-        text: "底图图层",
-        icon: "fa fa-folder",
-        expanded: true,
-        nodes: [
-          {
-            text: "高德地图",
-            icon: "fa fa-folder",
-            nodes: [
-              {
-                id:    "sub-node-1",
-                text:  "Sub Child Node 1",
-                icon:  "fa fa-folder",
-                class: "nav-level-3",
-                  layer: new ol.layer.Tile({
-                      source:new ol.source.XYZ({
-                            url: 'https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}&lang=zh_cn&scl=1&sv=7&key=ce2bc8663af5253256250118e9455e5a', // 高德地图矢量图源URL
-                            crossOrigin: 'anonymous',
-                            attributions: '© 高德地图'
-                      })
-                  }),
-                  state: { checked: true}  // 默认选中
-              },
-              {
-                id:"sub-node-2",
-                text: "osm地图",
-                icon: "fa fa-folder",
-                class: "nav-level-3",
-                  layer: new ol.layer.Tile({
-                        source: new ol.source.OSM()
-                    }),
-                    state: { checked: false } // 默认no
-
-              }
-            ]
-          },
-          {
-            text: "osm",
-             icon: "fa fa-folder"
-          }
-        ]
-      },
-      {
-        text: "数据图层",
-        icon: "fa fa-folder"
-      },
-    ];
-  return tree;
-}
-
-$('#tree').bstreeview({ data: getTree() });
-
 // 将预处理完成后的图像显示到地图上
 display_button = document.getElementById("display_preProcess_image");
 display_button.addEventListener("click", function(){
@@ -340,7 +287,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   let textarea = document.getElementById("floatingTextarea2");
   let text = textarea.value;
   console.log('Text content:', text);
-  let url = document.getElementById("rawImage").src;
+  let url = document.getElementById("rawImage2").src;
   let tifUrl = replaceFileExtension(url, 'tif')
   // 加载图案显示
   //const spinner = document.getElementById('spinner1');
@@ -352,7 +299,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       console.log('Process:', operations)
       console.log('Parameters:', params)
       console.log('Processed string:', resultUrl);
-      uploadImage(resultUrl, 'resultImage');
+      uploadImage(resultUrl, 'resultImage2');
       //spinner.style.display = 'none'; // 加载完成后隐藏图案
       let tableBody  = document.getElementById("myTable")
       operations.forEach((operation, index) => {
@@ -376,5 +323,163 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 });
 
+// 清空ProcessStream处理流程框的内容
+let clearButton = document.getElementById("clear_image")
+clearButton.addEventListener("click", function() {
+    // 获取包含badge的容器元素
+    var container = document.getElementById('processStream');
+
+    // 查找容器中所有的badge元素
+    var badges = [...container.querySelectorAll('.badge.rounded-pill.bg-secondary')];
+    console.log(badges)
+
+    // 遍历badge元素数组，并从容器中移除它们
+    badges.forEach(function(badge) {
+        badge.parentNode.removeChild(badge);
+    });
+})
 
 
+// 下载图像的请求
+ // 获取按钮元素并添加点击事件监听器
+document.getElementById('save_preProcess_image').addEventListener('click', function() {
+    let image_url = document.getElementById("resultImage").src
+    let new_url = replaceFileExtension(image_url, "tif")
+    let request_url = "/download_image/"+new_url
+    // 使用JavaScript的fetch API发送GET请求到Flask后端
+    fetch(request_url)
+        .then(response => {
+            // 如果响应的状态码是200，则将响应的数据转换为Blob
+            if (response.status === 200) {
+                return response.blob();
+            } else {
+                throw new Error('网络请求错误');
+            }
+        })
+        .then(blob => {
+            // 创建一个临时的URL指向Blob对象
+            const url = window.URL.createObjectURL(blob);
+            // 创建一个a标签用于触发下载
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            // 设置下载的文件名
+            a.download = 'image.png';
+            // 将a标签添加到文档中并触发点击事件
+            document.body.appendChild(a);
+            a.click();
+            // 释放创建的URL对象
+            window.URL.revokeObjectURL(url);
+            // 从文档中移除a标签
+            document.body.removeChild(a);
+        })
+        .catch(error => {
+            console.error('发生错误:', error);
+        });
+});
+// 其他网页传递信息的操作
+document.addEventListener('DOMContentLoaded', (event) => {
+    // 获取div中存放的内容
+    let url = document.getElementById('urlSpan').textContent;
+    let location = document.getElementById('locationSpan').textContent;
+    let bool = document.getElementById("bool").textContent;
+    bool = bool.replace(/\s+/g, '').replace(/\n+/g, '');
+    console.log(bool)
+    if( bool === "a")
+    {
+        // 去除字符串中的换行符、制表符（如果有）和首尾空格
+        let str = location.replace(/\s+/g, '').replace(/\n+/g, '');
+        // 去除数字前面的引号
+        str = str.replace(/"\s*([0-9\.]+)\s*"/g, '$1');
+        // 解析字符串为JSON数组
+        let  arr = JSON.parse(str);
+        // 去除换行和制表符
+        let url_exp = url.replace(/\s+/g, '').replace(/\n+/g, '');
+        // 输出数组
+        console.log('图像地址：', url_exp);
+        console.log('图像位置：', str);
+        // 添加新图层
+        const imageLayer_result = new ol.layer.Image({
+            source: new ol.source.ImageStatic({
+                url: url_exp,
+                projection: 'EPSG:3857',
+                imageExtent: arr
+            }),
+            opacity:0.5
+        });
+        console.log(imageLayer_result)
+        map.addLayer(imageLayer_result);
+        let newCenter= [arr[0], arr[1]]; // 将经纬度转换为地图的投影坐标系
+        map.getView().setCenter(newCenter);
+        console.log(map.getLayers())
+    }
+
+});
+
+var layerSwitcher = new ol.control.LayerSwitcher({
+    reverse: true,
+    groupSelectStyle: 'group',
+    tipLabel: '图层管理器'
+});
+map.addControl(layerSwitcher)
+// 实现显示/隐藏全部图层功能
+      function toggleAllLayersVisibility() {
+        var layers = map.getLayers().getArray();
+        var allLayersVisible = layers.every(function(layer) {
+          return layer.getVisible();
+        });
+        layers.forEach(function(layer) {
+          layer.setVisible(!allLayersVisible);
+        });
+      }
+
+      // 添加删除图层的功能
+      function removeLayer(layer) {
+        map.removeLayer(layer);
+      }
+
+      // 添加信息显示按钮的功能
+      function showLayerInfo(layer) {
+        alert(layer.get('title') + ' - ' + layer.getVisible());
+      }
+
+      // 更新图层切换器，以添加删除按钮和信息显示按钮
+      layerSwitcher.renderPanel = function() {
+        var panel = document.createElement('div');
+        panel.className = 'ol-layerswitcher ol-unselectable ol-control';
+
+        var button = document.createElement('button');
+        button.innerHTML = '全部显示/隐藏';
+        button.addEventListener('click', toggleAllLayersVisibility);
+        panel.appendChild(button);
+
+        ol.control.LayerSwitcher.prototype.renderPanel.call(this, panel);
+
+        // 为每个图层添加删除按钮和信息显示按钮
+        var layers = this.getMap().getLayers().getArray();
+        layers.forEach(function(layer) {
+          var div = document.createElement('div');
+          var removeButton = document.createElement('button');
+          removeButton.innerHTML = '删除';
+          removeButton.addEventListener('click', function() {
+            removeLayer(layer);
+          });
+          div.appendChild(removeButton);
+
+          var infoButton = document.createElement('button');
+          infoButton.innerHTML = '信息';
+          infoButton.addEventListener('click', function() {
+            showLayerInfo(layer);
+          });
+          div.appendChild(infoButton);
+
+          panel.appendChild(div);
+        });
+
+        return panel;
+      };
+
+      layerSwitcher.panel = layerSwitcher.renderPanel();
+
+      // 更新地图
+      map.render();
