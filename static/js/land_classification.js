@@ -103,7 +103,7 @@ function multimodingImageRgb(){
     .then(parsedData => {
       // 解析后的数据在这里处理
       console.log('Success:', parsedData);
-      return {"url":parsedData.resultUrl,"data":parsedData.sum_dict}; // 返回的数据对象的 url 属性
+      return {"url":parsedData.resultUrl,"data":parsedData.sum_dict,"chatResult":parsedData.chatResult}; // 返回的数据对象的 url 属性
     })
     .catch(error => {
       // 处理错误
@@ -113,17 +113,23 @@ function multimodingImageRgb(){
 
     // 使用 multi_Promise
     rgbPromise.then(result => {
+        console.log("___________________result:",result)
         // 定义echarts的对象
         let landChart = echarts.init(document.getElementById('chart1'));
         // 处理获取到的 URL
         let url = result.url
+        let chatText = result.chatResult
         data = result.data
         console.log('resultUrl:', url);
         console.log('data:', data)
+        console.log('chatResult:', chatText)
         let dataList = []  // 重组数据源
         for (let key in data){
             dataList.push({"name":key,"value":data[key]})
-        }
+        };
+        // 显示分析的结果
+        document.getElementById("cardText").innerText = chatText
+
         let option = {
             tooltip: {
                 trigger: 'item'
@@ -138,6 +144,15 @@ function multimodingImageRgb(){
                     type: 'pie',
                     radius: '50%',
                     data: dataList,  // 使用数据
+                    itemStyle: {
+                        color: function (params) {
+                            // 根据每个扇区的数据项返回不同的颜色
+                            let colorList = [
+                                '#ffd700','#b41e1e' ,'#000000','#228b22','#0000ff', '#646464','#ffffff','#dcdcdc'
+                            ];
+                            return colorList[params.dataIndex];
+                        }
+                    },
                     emphasis: {
                         itemStyle: {
                             shadowBlur: 10,
@@ -145,6 +160,7 @@ function multimodingImageRgb(){
                             shadowColor: 'rgba(0, 0, 0, 0.5)'
                         }
                     }
+
                 }
             ]
         };

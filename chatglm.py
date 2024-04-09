@@ -18,3 +18,15 @@ def chatGLM(user_message):
     )
     print(response.choices[0].message.content)
     return response.choices[0].message.content
+
+def analysisChat(user_message):
+    print("user_message:", user_message)
+    client = ZhipuAI(api_key="7dd497905dff14459b0f99c3de1fd63a.YPSoVINMAdvBhRjs")  # 填写您自己的APIKey
+    message = [{"role": "system", "content": "请分析以下的地理信息:格式为“地物类型名称”:地物所占像素数量，直接每种地物像素占图片总像素数量的百分比（无需写出计算推理过程和任何公式！），并给出当地的土地利用情况的详细分析"},
+               user_message]
+    response = client.chat.completions.create(
+        model="glm-4",  # 填写需要调用的模型名称
+        messages=message,
+    )
+    print(response.choices[0].message.content)
+    return response.choices[0].message.content

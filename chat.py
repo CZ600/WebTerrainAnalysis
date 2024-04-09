@@ -45,3 +45,29 @@ def call_with_prompt(messages):
             response.code, response.message
         ))
         return result, messages
+
+def simple_multimodal_conversation_call():
+    """Simple single round multimodal conversation call.
+    """
+    dashscope.api_key = 'sk-ac7bd32e53284528855a5f03347a4e7c'  # 将 API-KEY
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"image": "file://static/新西兰库克山.jpg"},
+                {"text": "这是什么?"}
+            ]
+        }
+    ]
+    response = dashscope.MultiModalConversation.call(model='qwen-vl-max',
+                                                     messages=messages)
+    # The response status_code is HTTPStatus.OK indicate success,
+    # otherwise indicate request is failed, you can get error code
+    # and message from code and message.
+    if response.status_code == HTTPStatus.OK:
+        print(response)
+    else:
+        print(response.code)  # The error code.
+        print(response.message)  # The error message.
+
+simple_multimodal_conversation_call()

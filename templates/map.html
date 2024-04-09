@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol-ext@4.0.17/dist/ol-ext.min.css">
 <style>
   .map {
-    height: 900px;
+    height: calc(100vh - 61px);
     width: 100%;
   }
 
@@ -32,13 +32,6 @@
   #offcanvasRight1 {
       width:1000px;
   }
-
-    {# /* 隐藏加载图标 */ #}
-
-    {#.spinner-border #}
-
-      {# display: none#}
-
 
     /* 加载状态下的按钮样式 */
     .loading .spinner-border {
@@ -64,38 +57,7 @@
 {% block content %}
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-2 bg-light sidebar"> <!-- 侧边栏 -->
-      {# 多级折叠菜单 #}
-      <div class="accordion accordion-flush" id="accordionFlushExample">
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="flush-headingOne">
-            {# 折叠菜单标题处 #}
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-              data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
-              地图功能
-            </button>
-          </h2>
-          <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
-            data-bs-parent="#accordionFlushExample">
-          {# 折叠菜单内容存放处 #}
-            <!-- bstreeview 树形控件容器 -->
-              <div class="card">
-                  <div class="card-body mt-2 mb-2" >
-                      <div id="layer-switcher-outside" class="layer-switcher-outside"></div>
-                  </div>
-              </div>
-          </div>
-        </div>
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="flush-headingTwo">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-              data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
-              数据处理
-            </button>
-          </h2>
-          <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="flush-headingTwo"
-            data-bs-parent="#accordionFlushExample">
-            {# 折叠菜单内容存放处 #}
+    <div class="col-md-2 bg-white sidebar"> <!-- 侧边栏 -->
             <form id="uploadForm" enctype="multipart/form-data">
               <div class="form-group row mt-3 mb-3 mx-3">
                 <div class="col-sm-13">
@@ -366,30 +328,6 @@
                 </div>
               </div>
             </form>
-          </div>
-        </div>
-          <div id="urlSpan" style="display:none">
-                {{ imageUrl }}
-            </div>
-            <div id="locationSpan" style="display:none">
-                {{ location }}
-            </div>
-            <div id="bool" style="display:none" value={{ bool }}>
-                {{ bool }}
-            </div>
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="flush-headingThree">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-              data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
-              智能交互
-            </button>
-          </h2>
-          <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree"
-            data-bs-parent="#accordionFlushExample">
-            {# 折叠菜单内容存放处 #}
-          </div>
-        </div>
-      </div>
     </div>
     <div class="col-md-10"> <!-- 地图容器 -->
       <div id="map" class="map"></div>

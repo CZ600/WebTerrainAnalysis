@@ -47,7 +47,7 @@
             <!-- 第二个 card -->
             <div class="row-cols-1">
                 <div class="card">
-                    <div class="card-body">
+                    <div class="card-body" style="height:540px">
                         <button class="btn btn-light" id="startAnalysis"> 开始计算 </button>
                         <button class="btn btn-light mt-2 mb-2" id="pop-up" data-bs-toggle="modal" data-bs-target="#exampleModal" >地图显示</button>
                         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -73,7 +73,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="chart1" style="width: 385px;height:507px;"></div>
+                      <div class="panel" style="overflow:auto; max-height:360px;max-width:450px">
+                        <div class="card-text" id="cardText">
+                        </div>
+                      </div>
                     </div>
                 </div>
             </div>
@@ -90,7 +93,7 @@
             <!-- 第二个 card -->
             <div class="card mt-2">
                 <div class="card-body">
-                    <div id="chart3" style="width: 385px;height:382px;"></div>
+                    <div id="chart1" style="width: 385px;height:382px;"></div>
                 </div>
             </div>
         </div>

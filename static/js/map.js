@@ -25,12 +25,21 @@ let map = new ol.Map({
     layers: [
         new ol.layer.Tile({
             source: new ol.source.XYZ({
-                title: "高德地图",
+                title: "高德道路地图",
                 url: 'https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}&lang=zh_cn&scl=1&sv=7&key=ce2bc8663af5253256250118e9455e5a', // 高德地图矢量图源URL
                 crossOrigin: 'anonymous',
                 attributions: '© 高德地图'
             })
+        }),
+        new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                title: "高德卫星地图",
+                url: 'https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}&lang=zh_cn&scl=1&sv=7&key=ce2bc8663af5253256250118e9455e5a', // 高德地图矢量图源URL
+                crossOrigin: 'anonymous',
+                attributions: '© 高德地图'
+            })
         })
+
     ],
     view: new ol.View({
         center: ol.proj.fromLonLat([100.25, 29.25]), // 北京的经纬度坐标
@@ -421,6 +430,7 @@ var layerSwitcher = new ol.control.LayerSwitcher({
     groupSelectStyle: 'group',
     tipLabel: '图层管理器'
 });
+
 map.addControl(layerSwitcher)
 // 实现显示/隐藏全部图层功能
       function toggleAllLayersVisibility() {

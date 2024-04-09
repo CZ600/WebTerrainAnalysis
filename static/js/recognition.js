@@ -131,13 +131,18 @@ function multimodingImage(){
 
     // 使用 multi_Promise
     multi_Promise.then(result => {
+        console.log('-_---------result:',result)
         let landChart = echarts.init(document.getElementById('chart1'));
         // 处理获取到的 URL
         let url = result.resultUrl
         let data = result.sum_dict
+        let chatText =result.chatResult
+        console.log('chatResult:', chatText)
         console.log('resultUrl:', url);
         console.log('data:', data)
         changeImage(url,"111")
+        // 修改要素的内容
+        document.getElementById('cardText').innerText = chatText;
         let dataList = []  // 重组数据源
         for (let key in data){
             dataList.push({"name":key,"value":data[key]})
@@ -156,6 +161,15 @@ function multimodingImage(){
                     type: 'pie',
                     radius: '50%',
                     data: dataList,  // 使用数据
+                    itemStyle: {
+                        color: function (params) {
+                            // 根据每个扇区的数据项返回不同的颜色
+                            let colorList = [
+                                '#FFF0F5', '#C71585', '#2F4F4F'
+                            ];
+                            return colorList[params.dataIndex];
+                        }
+                    },
                     emphasis: {
                         itemStyle: {
                             shadowBlur: 10,

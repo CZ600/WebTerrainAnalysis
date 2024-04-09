@@ -1,10 +1,8 @@
 from flask import Flask, request, send_file, jsonify
 import flask
 import base64
-# from sam.the_sam_Max import *
 from flask_bootstrap import Bootstrap5
 from flask_cors import CORS, cross_origin
-from werkzeug.utils import secure_filename
 from image_process import *
 from dashscope.api_entities.dashscope_response import Role
 from wsgiref.simple_server import make_server
@@ -16,7 +14,9 @@ from osgeo import gdal
 from X import predict, see_RGB
 import re
 from mobile_sam import *
-
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash
+from chatglm import *
 location = []
 point_x = []
 point_y = []
@@ -29,15 +29,86 @@ app = Flask(__name__)
 app.secret_key = '3.1415926535897932'
 bootstrap = Bootstrap5(app)
 
+
+'''
+# 添加拓展
+%load_ext sql
+# 数据库连接初始化
+%sql postgresql://postgres:123456@127.0.0.1/gisc
+# conn=psycopg2.connect(dbname=gisc,user=gisc,password=ZCH20021104,host = "192.168.171.128",port=5432)
+'''
+
 # 路由
+# 数据库管理
+# 配置数据库 URI
+# 格式通常是：postgresql://username:password@host:port/database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123456@127.0.0.1/gisc'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# 初始化 SQLAlchemy
+db = SQLAlchemy(app)
+
+# 定义模型，指定表和模式
+class Login(db.Model):
+    __tablename__ = 'login'
+    __table_args__ = {'schema': 'users'}
+    username = db.Column(db.String(80), primary_key=True)
+    password = db.Column(db.String(120), nullable=False)
+# 创建数据库和表（如果尚不存在）
+@app.before_request
+def create_tables():
+    db.create_all()
+
+# 获取所有登录信息
+@app.route('/logins', methods=['GET'])
+def get_logins():
+    logins = Login.query.all()
+    return jsonify([{'username': l.username, 'password': l.password} for l in logins])
+
+# 更新登录信息
+@app.route('/logins/<string:username>', methods=['PUT'])
+def update_login(username):
+    login = Login.query.get_or_404(username)
+    data = request.get_json()
+    login.password = data['password']
+    db.session.commit()
+    return jsonify({'message': 'Login updated', 'login': {'username': login.username, 'password': login.password}})
+
+# 用户注册路由
+@app.route('/users/register', methods=['POST'])
+def register_user():
+    data = request.get_json()
+    username = data['username']
+    password = data['password']
+
+    # 检查用户名是否已存在
+    if Login.query.get(username):
+        return jsonify({'message': 'User already exists'}), 400
+
+    # 创建新用户
+    hashed_password = generate_password_hash(password)
+    new_user = Login(username=username, password=hashed_password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'message': 'User registered', 'user': {'username': username}}), 201
+
+
 ''' 页面管理 '''
 
 
-# 首页
+# 登录
 @app.route('/', methods=['GET', 'POST'])
-def index():  # put application's code here
+def login():  # put application's code here
+    return flask.render_template('login.html')
+# 注册
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    return flask.render_template('register.html')
+# 首页
+@app.route('/index', methods=['GET', 'POST'])
+def index():
     return flask.render_template('index.html')
-
 
 # 地图页面
 @app.route("/map")
@@ -293,17 +364,24 @@ def multimoding():
     image_url2 = request.json.get("DEMImage")
     image_url3 = request.json.get("slopeImage")
     # 合成影像
-    print(image_url1)
     m_image_name = align_images(image_url1, image_url2, image_url3)
     print("merge_image:", m_image_name)
     # 对图像进行识别
     # 获取识别图像
     temp_url = predict.split_and_reconstruct(m_image_name, (512, 512), 512, 'attention_unet')
+    #temp_url = "static/image/result/multimoding_result.png"
     predict_image = request.host_url + temp_url
-    classes = ["background", "lake", "vally"]
+    classes = ["背景", "水体", "冰川谷"]
     colormap = [[0, 0, 0], [192, 64, 128], [255, 255, 255]]
     predict_dict = sum_rgb(classes, colormap, temp_url)
-    return jsonify({'resultUrl': predict_image, "sum_dict": predict_dict})
+
+    # 合成用户的输入信息
+    user_message = {'role': 'user', 'content': str(predict_dict)}
+    # 调用大模型进行对话
+    result = analysisChat(user_message)
+    # print("resultText:", result)
+    print("resultText:__________________________",str(result))
+    return jsonify({'resultUrl': predict_image, "sum_dict": predict_dict,"chatResult":str(result)})
 
 
 @app.route("/classify", methods=['GET', "POST"])
@@ -313,14 +391,20 @@ def classify():
     print("imageUrl:", image_url)
     base_url = re.sub(r'http://127.0.0.1:8000/', '', image_url)
     print("loacal:", base_url)
-    classes = ["未知", "背景值", "建设用地", "道路", "水体", "高山草甸", "森林", "农业"]
+    classes = ["未知", "背景值", "建设用地", "道路", "水体", "高原荒漠", "森林", "农业"]
     colormap = [[0, 0, 0], [255, 255, 255], [180, 30, 30], [100, 100, 100], [0, 0, 255], [220, 220, 220],
                 [34, 139, 34], [255, 215, 0]]
+
     temp_url = see_RGB.split_and_reconstruct_rgb(base_url, (512, 512), 128, 'unet_x')
+    # temp_url = 'static/image/result/classification_result.png'
     predict_image = request.host_url + temp_url
     result_dict = sum_rgb(classes, colormap, temp_url)  # 统计预测结果图像的数据分布方法
-    return jsonify({'resultUrl': predict_image, "sum_dict": result_dict})
-
+    # 合成用户的输入信息
+    user_message = {'role': 'user', 'content': str(result_dict)}
+    # 调用大模型进行对话
+    result = analysisChat(user_message)
+    print("resultText:", result)
+    return jsonify({'resultUrl': predict_image, "sum_dict": result_dict,"chatResult":result})
 
 @app.route("/overlayAnalysis", methods=['GET', "POST"])
 @cross_origin("*")
@@ -331,12 +415,18 @@ def overlayAnalysis():
     classify_url = re.sub(r'http://127.0.0.1:8000/', '', classify_url)
     print("multimoding_url:", multimoding_url, "classify_url:", classify_url)
     return_url = overlay_analysis(multimoding_url, classify_url)
-    # result_path = request.host_url + return_url
-    result_path = "http://127.0.0.1:8000/static/image/result/classification_result.png"
-    classes = ["不适宜开发", "水体", "已经建设利用土地", "未知", "高山草甸", "其他"]
-    colormap = [[255, 0, 0], [128, 64, 192], [30, 30, 180], [0, 0, 0], [220, 220, 220], [203, 192, 255]]
+    # return_url = "static/image/result/classification_result.png"
+    result_path = request.host_url + return_url
+    # result_path = "http://127.0.0.1:8000/static/image/result/classification_result.png"
+    classes = ["不适宜开发", "水体", "已经建设利用土地", "未知", "高原荒漠", "其他"]
+    colormap = [[255, 0, 0], [128, 64, 192], [255,215,0], [0, 0, 0], [220, 220, 220], [203, 192, 255]]
     class_count = sum_rgb(classes, colormap, return_url)
-    return jsonify({'resultUrl': result_path, "class_count": class_count})
+    # 合成用户的输入信息
+    user_message = {'role': 'user', 'content': str(class_count)}
+    # 调用大模型进行对话
+    result = analysisChat(user_message)
+    print("resultText:", result)
+    return jsonify({'resultUrl': result_path, "class_count": class_count,"chatResult":result})
 
 
 # 绘图窗口请求

@@ -73,7 +73,7 @@ function overlayAnalysis(){
     .then(parsedData => {
       // 解析后的数据在这里处理
       console.log('Success:', parsedData);
-      return {"url":parsedData.resultUrl,"data":parsedData.class_count}; // 返回的数据对象的 url 属性
+      return {"url":parsedData.resultUrl,"data":parsedData.class_count,"chatResult":parsedData.chatResult}; // 返回的数据对象的 url 属性
     })
     .catch(error => {
       // 处理错误
@@ -86,10 +86,11 @@ function overlayAnalysis(){
         // 定义echarts的对象
         let landChart = echarts.init(document.getElementById('chart1'));
         let landChartBar = echarts.init(document.getElementById('chart2'));
-        let landChartPolar = echarts.init(document.getElementById('chart3'));
         // 处理获取到的 URL
         let url = result.url
-        data = result.data
+        let data = result.data
+        let text = result.chatResult
+        document.getElementById("cardText").innerText = text
         console.log('resultUrl:', url);
         console.log('data:', data)
         let dataList = []  // 重组数据源
@@ -110,6 +111,15 @@ function overlayAnalysis(){
                 type: 'pie',
                 radius: '50%',
                 data: dataList,
+                itemStyle: {
+                        color: function (params) {
+                            // 根据每个扇区的数据项返回不同的颜色
+                            let colorList = [
+                                '#DC143C', '#cbc0ff', '#FFD700','#000000','#0000FF','#dcdcdc'
+                            ];
+                            return colorList[params.dataIndex];
+                        }
+                    },
                 emphasis: {
                     itemStyle: {
                         shadowBlur: 10,
@@ -168,44 +178,9 @@ function overlayAnalysis(){
                                 }
                               ]
                             };
-        let option3 = {
-                  title: [
-                    {
-                      text: '分析数据展示：',
-                        left:'center'
-                    }
-                  ],
-                legend: {
-                    orient: 'vertical',
-                    left: 'left',
-                },
-                  polar: {
-                    radius: [30, '80%']
-                  },
-                  radiusAxis: {
-                    max: 250000
-                  },
-                  angleAxis: {
-                    type: 'category',
-                    data: nameList,
-                    startAngle: 75
-                  },
-                  tooltip: {},
-                  series: {
-                    type: 'bar',
-                    data: valueList,
-                    coordinateSystem: 'polar',
-                    label: {
-                      show: true,
-                      position: 'middle',
-                      formatter: '{b}'
-                    }
-                  },
-                  animation: false
-        }
+
         landChart.setOption(option)
         landChartBar.setOption(option2)
-        landChartPolar.setOption(option3)
         // 自动触发饼图图标
         let currentIndex = -1;
 

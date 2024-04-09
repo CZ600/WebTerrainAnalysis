@@ -30,7 +30,7 @@
 <div class="row m-lg-2">
     <div class="card m-lg-2 mr-4">
         <div class="row m-lg-2 mr-1">
-            <div class="col-md-4 mt-2">
+            <div class="col-md-3 mt-2">
                 <p class="card-text">请选择一幅可见光遥感影像：</p>
                 <div class="form-group" id="formGroup1">
                     <input class="form-control form-control-sm mt-1 mb-3" type="file" id="imageInputRgb">
@@ -62,13 +62,26 @@
                     </div>
                 </div>
             </div>
-            <div class=" col-xs-12 col-md-6">
+            <div class="col-4">
+                <div class="card mt-2">
+                  <div class="card-header" id="resulttext">
+                    分析结果：
+                  </div>
+                  <div class="panel" style="overflow:auto; max-height:360px;max-width:450px">
+                    <div class="card-text" id="cardText">
+
+                    </div>
+                  </div>
+
+                </div>
+            </div>
+            <div class=" col-xs-12 col-md-5">
                 <div class="row-cols-2 mt-3">
-                    <h4>土地分类结果：</h4>
+                    <h4>统计情况：</h4>
                 </div>
                 <div class="row-cols-2 mt-2">
                     <div class="row-cols-2 mt-2" id="result_table_Rgb">
-                        <div class="echart" id="chart1" style="width: 550px;height:350px;">
+                        <div class="echart" id="chart1" style="width: 500px;height:350px;">
                         </div>
                     </div>
                 </div>
