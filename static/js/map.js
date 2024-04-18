@@ -386,44 +386,44 @@ document.getElementById('save_preProcess_image').addEventListener('click', funct
             console.error('发生错误:', error);
         });
 });
-// 其他网页传递信息的操作
-document.addEventListener('DOMContentLoaded', (event) => {
-    // 获取div中存放的内容
-    let url = document.getElementById('urlSpan').textContent;
-    let location = document.getElementById('locationSpan').textContent;
-    let bool = document.getElementById("bool").textContent;
-    bool = bool.replace(/\s+/g, '').replace(/\n+/g, '');
-    console.log(bool)
-    if( bool === "a")
-    {
-        // 去除字符串中的换行符、制表符（如果有）和首尾空格
-        let str = location.replace(/\s+/g, '').replace(/\n+/g, '');
-        // 去除数字前面的引号
-        str = str.replace(/"\s*([0-9\.]+)\s*"/g, '$1');
-        // 解析字符串为JSON数组
-        let  arr = JSON.parse(str);
-        // 去除换行和制表符
-        let url_exp = url.replace(/\s+/g, '').replace(/\n+/g, '');
-        // 输出数组
-        console.log('图像地址：', url_exp);
-        console.log('图像位置：', str);
-        // 添加新图层
-        const imageLayer_result = new ol.layer.Image({
-            source: new ol.source.ImageStatic({
-                url: url_exp,
-                projection: 'EPSG:3857',
-                imageExtent: arr
-            }),
-            opacity:0.5
-        });
-        console.log(imageLayer_result)
-        map.addLayer(imageLayer_result);
-        let newCenter= [arr[0], arr[1]]; // 将经纬度转换为地图的投影坐标系
-        map.getView().setCenter(newCenter);
-        console.log(map.getLayers())
-    }
-
-});
+// // 其他网页传递信息的操作
+// document.addEventListener('DOMContentLoaded', (event) => {
+//     // 获取div中存放的内容
+//     let url = document.getElementById('urlSpan').textContent;
+//     let location = document.getElementById('locationSpan').textContent;
+//     let bool = document.getElementById("bool").textContent;
+//     bool = bool.replace(/\s+/g, '').replace(/\n+/g, '');
+//     console.log(bool)
+//     if( bool === "a")
+//     {
+//         // 去除字符串中的换行符、制表符（如果有）和首尾空格
+//         let str = location.replace(/\s+/g, '').replace(/\n+/g, '');
+//         // 去除数字前面的引号
+//         str = str.replace(/"\s*([0-9\.]+)\s*"/g, '$1');
+//         // 解析字符串为JSON数组
+//         let  arr = JSON.parse(str);
+//         // 去除换行和制表符
+//         let url_exp = url.replace(/\s+/g, '').replace(/\n+/g, '');
+//         // 输出数组
+//         console.log('图像地址：', url_exp);
+//         console.log('图像位置：', str);
+//         // 添加新图层
+//         const imageLayer_result = new ol.layer.Image({
+//             source: new ol.source.ImageStatic({
+//                 url: url_exp,
+//                 projection: 'EPSG:3857',
+//                 imageExtent: arr
+//             }),
+//             opacity:0.5
+//         });
+//         console.log(imageLayer_result)
+//         map.addLayer(imageLayer_result);
+//         let newCenter= [arr[0], arr[1]]; // 将经纬度转换为地图的投影坐标系
+//         map.getView().setCenter(newCenter);
+//         console.log(map.getLayers())
+//     }
+//
+// });
 
 var layerSwitcher = new ol.control.LayerSwitcher({
     reverse: true,
