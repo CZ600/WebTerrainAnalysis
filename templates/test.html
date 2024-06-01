@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>简单绘图功能</title>
+</head>
+<body>
+  <h1>简单绘图功能</h1>
+  <canvas id="myCanvas" width="1000" height="1000" style="border:1px solid #000000;"></canvas>
+
+  <script>
+    // 获取 canvas 元素
+    const canvas = document.getElementById('myCanvas');
+    // 获取绘图上下文
+    const ctx = canvas.getContext('2d');
+
+    let isDrawing = false;
+    let shape = 'point'; // 'point', 'line', 或 'rectangle'
+
+    // 鼠标按下事件
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      const x = e.offsetX;
+      const y = e.offsetY;
+
+      if (shape === 'point') {
+        drawPoint(ctx, x, y);
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      }
+    });
+
+    // 鼠标移动事件
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+
+      const x = e.offsetX;
+      const y = e.offsetY;
+
+      if (shape === 'line') {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除之前的绘图
+        drawPoint(ctx, x, y); // 重新绘制点
+      } else if (shape === 'rectangle') {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除之前的绘图
+        drawRectangle(ctx, x, y); // 重新绘制矩形
+      }
+    });
+
+    // 鼠标松开事件
+    canvas.addEventListener('mouseup', () => {
+      isDrawing = false;
+    });
+
+    // 绘制点
+    function drawPoint(ctx, x, y) {
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#000000';
+      ctx.fill();
+    }
+
+    // 绘制线
+    function drawLine(ctx, x1, y1, x2, y2) {
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    // 绘制矩形
+    function drawRectangle(ctx, x, y) {
+      ctx.rect(0, 0, x, y);
+      ctx.stroke();
+    }
+  </script>
+</body>
+</html>

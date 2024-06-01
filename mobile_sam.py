@@ -12,7 +12,7 @@ def sam_predict(image_path, points, labels, save_path):
     predictor = SAMPredictor(overrides=overrides)
 
     # Set image
-    predictor.set_image("static/雪山天空.jpg")  # set with image file
+    predictor.set_image(image_path)  # set with image file
     # 假设 predictor 是一个 BasePredictor 实例
     predictor.save_dir = Path("D:/project/html/mapbox/flaskProject/static/image/result/sam")
     # # Define multiple points and labels
@@ -20,6 +20,7 @@ def sam_predict(image_path, points, labels, save_path):
     # labels = [1, 1]  # Each label corresponds to a point
     # Run prediction with multiple points and specify the save directory
     results = predictor(points=points, labels=labels, line_width=1, show_labels=True)
+    print(results)
     # Reset image
     predictor.reset_image()
     original_string = "/static/image/result/sam/" + name
@@ -44,6 +45,7 @@ def sam_auto_pr(image_path, save_path):
     # labels = [1, 1]  # Each label corresponds to a point
     # Run prediction with multiple points and specify the save directory
     results = predictor()
+    print(results)
     # Reset image
     predictor.reset_image()
     original_string = "/static/image/result/sam/" + name

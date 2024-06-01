@@ -7,28 +7,34 @@ from image_process import *
 from dashscope.api_entities.dashscope_response import Role
 from wsgiref.simple_server import make_server
 from chat import call_with_prompt
-import json
-from chatglm import chatGLM
 from image_merge import align_images
-from osgeo import gdal
 from X import predict, see_RGB
 import re
 from mobile_sam import *
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 from chatglm import *
-location = []
-point_x = []
-point_y = []
-labels = []
+from label_process import *
+
+location = []  # 存放地理坐标
+point_x = []  # 存放prompt点y坐标
+point_y = []  # 存放prompt点x坐标
+labels = []  # 存放json标签
+label_list = []  # 存放正负标签
 po_ne = [1]
+json_data = {
+    "version": "4.4.0",
+    "flags": {},
+    "shapes": [],
+    "imagePath": "",
+    "imageData": ""  # 这里应该是实际图片的base64编码
+}  # 存放labelme格式的标签文件
 
 # sk-ac7bd32e53284528855a5f03347a4e7c
 
 app = Flask(__name__)
 app.secret_key = '3.1415926535897932'
 bootstrap = Bootstrap5(app)
-
 
 '''
 # 添加拓展
@@ -48,22 +54,27 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # 初始化 SQLAlchemy
 db = SQLAlchemy(app)
 
+
 # 定义模型，指定表和模式
 class Login(db.Model):
     __tablename__ = 'login'
     __table_args__ = {'schema': 'users'}
     username = db.Column(db.String(80), primary_key=True)
     password = db.Column(db.String(120), nullable=False)
+
+
 # 创建数据库和表（如果尚不存在）
 @app.before_request
 def create_tables():
     db.create_all()
+
 
 # 获取所有登录信息
 @app.route('/logins', methods=['GET'])
 def get_logins():
     logins = Login.query.all()
     return jsonify([{'username': l.username, 'password': l.password} for l in logins])
+
 
 # 更新登录信息
 @app.route('/logins/<string:username>', methods=['PUT'])
@@ -73,6 +84,7 @@ def update_login(username):
     login.password = data['password']
     db.session.commit()
     return jsonify({'message': 'Login updated', 'login': {'username': login.username, 'password': login.password}})
+
 
 # 用户注册路由
 @app.route('/users/register', methods=['POST'])
@@ -101,14 +113,19 @@ def register_user():
 @app.route('/', methods=['GET', 'POST'])
 def login():  # put application's code here
     return flask.render_template('login.html')
+
+
 # 注册
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     return flask.render_template('register.html')
+
+
 # 首页
 @app.route('/index', methods=['GET', 'POST'])
 def index():
     return flask.render_template('index.html')
+
 
 # 地图页面
 @app.route("/map")
@@ -185,6 +202,13 @@ def label():
     return flask.render_template("label.html")
 
 
+# new label page
+@app.route("/label_new", methods=['GET', 'POST'])
+@cross_origin("*")
+def label_new():
+    return flask.render_template("label_new.html")
+
+
 # 顶部导航栏
 @app.route("/header")
 def header():
@@ -230,6 +254,7 @@ def upload_RGB():
         if file:
             # 读取tif文件
             file = request.files['file']
+            print(file.filename)
             # 调用图像处理函数处理,获取图像的url和图像的坐标数据
             img_url = image_load_RGB(file)
             return jsonify({'url': img_url})
@@ -327,6 +352,7 @@ def semantic_analysis():
     return jsonify({'resultUrl': result_url, "process": list1, "parameters": list2})
 
 
+# 聊天
 @app.route("/chatbot", methods=['POST'])
 @cross_origin("*")
 def chatbot():
@@ -357,6 +383,7 @@ def get_ip():
     return jsonify({'ip': ip})
 
 
+# 多模态识别
 @app.route("/multimoding", methods=['GET', "POST"])
 @cross_origin("*")
 def multimoding():
@@ -369,7 +396,7 @@ def multimoding():
     # 对图像进行识别
     # 获取识别图像
     temp_url = predict.split_and_reconstruct(m_image_name, (512, 512), 512, 'attention_unet')
-    #temp_url = "static/image/result/multimoding_result.png"
+    # temp_url = "static/image/result/multimoding_result.png"
     predict_image = request.host_url + temp_url
     classes = ["背景", "水体", "冰川谷"]
     colormap = [[0, 0, 0], [192, 64, 128], [255, 255, 255]]
@@ -380,10 +407,11 @@ def multimoding():
     # 调用大模型进行对话
     result = analysisChat(user_message)
     # print("resultText:", result)
-    print("resultText:__________________________",str(result))
-    return jsonify({'resultUrl': predict_image, "sum_dict": predict_dict,"chatResult":str(result)})
+    print("resultText:__________________________", str(result))
+    return jsonify({'resultUrl': predict_image, "sum_dict": predict_dict, "chatResult": str(result)})
 
 
+# 土地利用识别
 @app.route("/classify", methods=['GET', "POST"])
 @cross_origin("*")
 def classify():
@@ -404,8 +432,10 @@ def classify():
     # 调用大模型进行对话
     result = analysisChat(user_message)
     print("resultText:", result)
-    return jsonify({'resultUrl': predict_image, "sum_dict": result_dict,"chatResult":result})
+    return jsonify({'resultUrl': predict_image, "sum_dict": result_dict, "chatResult": result})
 
+
+# 叠置分析
 @app.route("/overlayAnalysis", methods=['GET', "POST"])
 @cross_origin("*")
 def overlayAnalysis():
@@ -419,17 +449,16 @@ def overlayAnalysis():
     result_path = request.host_url + return_url
     # result_path = "http://127.0.0.1:8000/static/image/result/classification_result.png"
     classes = ["不适宜开发", "水体", "已经建设利用土地", "未知", "高原荒漠", "其他"]
-    colormap = [[255, 0, 0], [128, 64, 192], [255,215,0], [0, 0, 0], [220, 220, 220], [203, 192, 255]]
+    colormap = [[255, 0, 0], [128, 64, 192], [255, 215, 0], [0, 0, 0], [220, 220, 220], [203, 192, 255]]
     class_count = sum_rgb(classes, colormap, return_url)
     # 合成用户的输入信息
     user_message = {'role': 'user', 'content': str(class_count)}
     # 调用大模型进行对话
     result = analysisChat(user_message)
     print("resultText:", result)
-    return jsonify({'resultUrl': result_path, "class_count": class_count,"chatResult":result})
+    return jsonify({'resultUrl': result_path, "class_count": class_count, "chatResult": result})
 
 
-# 绘图窗口请求
 @app.route("/showImage", methods=['GET', "POST"])
 @cross_origin("*")
 def show_image():
@@ -441,43 +470,41 @@ def show_image():
     return flask.render_template('index.html', imageUrl=url, location=location)
 
 
-@app.route('/get_pixel_coordinates', methods=['POST'])
-def handle_click_coordinates():
-    data = request.get_json()
-    point_x0 = data.get('point_x')
-    point_y0 = data.get('point_y')
-
-    point_x.append(point_x0)
-    point_y.append(point_y0)
-    labels.append(po_ne[-1])
-    # 在这里你可以处理接收到的坐标，比如存储或进一步处理
-    print(f"Received coordinates: ({point_x0}, {point_y0}, {po_ne[-1]})")
-
-    # 示例响应，实际应用中可能需要返回JSON或其他格式的数据
-    return '', 204  # 返回HTTP状态码204表示成功处理请求但没有内容返回
+'''绘图窗口请求'''
 
 
-@app.route('/send_int_value', methods=['POST'])
-def receive_int_value():
-    data = request.get_json()
-    y_n = data.get('value')
-    po_ne.append(y_n)
-    print("Received integer value:", y_n)
-    # 在这里可以根据接收到的整数值进行相应的处理
-    return '', 204
+@app.route('/dot', methods=['GET', 'POST'])
+@cross_origin("*")
+def dot():
+    data = request.get_json()  # 获取JSON数据
+    print("data:", data)
+    print("new point:",data)
+    point_y.append(int(data["point_y"]))
+    point_x.append(int(data["point_x"]))
+    label_list.append(int(data["value"]))
+    return flask.jsonify({'value': 'success!'})
 
 
+@app.route('/dot_clean', methods=['GET', 'POST'])
+@cross_origin("*")
+def dot_clean():
+    point_y.clear()
+    point_x.clear()
+    label_list.clear()
+    return flask.jsonify({'value': 'success clean the dots !'})
+
+
+# 结束绘图，发送坐标
 @app.route('/finish_sending_points', methods=['POST'])
+@cross_origin("*")
 def finish_sending_points():
     data = request.get_json()  # 获取JSON数据
     image_url = data['image_url']  # 获取图像URL
-    print(point_x)  # 在此处执行你想停止操作的函数或打印语句
-    tmp = list(zip(point_x, point_y))
-    label = [1] * len(tmp)
-    print(tmp)
-    print(labels)
-    path = sam_predict(image_url, tmp, label, "D:/project/html/mapbox/flaskProject/static/image/result/sam")
-    # path = sam_atuo_split(image_url)
+    tmp = list(zip(point_x, point_y))  # 合成坐标数组
+    print("image url:",image_url)
+    print("label point:", tmp)
+    print("label value:", label_list)
+    path = sam_predict(image_url, tmp, label_list, "D:/project/html/mapbox/flaskProject/static/image/result/sam")
     point_x.clear()
     point_y.clear()
     po_ne.clear()
@@ -489,7 +516,9 @@ def finish_sending_points():
     return jsonify({'path': path})
 
 
+# 自动绘图，发送坐标
 @app.route('/auto_signal', methods=['POST'])
+@cross_origin("*")
 def auto_sam():
     print("Auto Sam Start")  # 在此处执行你想停止操作的函数或打印语句
     data = request.get_json()  # 获取JSON数据
@@ -506,6 +535,32 @@ def auto_sam():
     print(path_result)
     # return '', 204  # 返回HTTP状态码204表示成功处理请求但没有内容返回
     return jsonify({'path': path_result})
+
+
+# 添加标签数据
+@app.route("/label_restore", methods=['POST', "GET"])
+@cross_origin("*")
+def label_restore():
+    data = request.get_json()
+    label = data["label"]
+    points = data["points"]
+    points_array = [[int(point['x']), int(point['y'])] for point in points]
+    print("label:", label, "points:", points_array)
+    new_shape = Object(label, points_array)
+    json_data["shapes"].append(new_shape.content)
+    print("json_data:", json_data)
+    return jsonify({'result': 'success', "json_data": json_data})
+
+
+# 存储标签文件
+@app.route("/save_label")
+@cross_origin("*")
+def save_label():
+    tempfile = "D:/project/html/mapbox/flaskProject/static/image/result/label.json"
+    with open(tempfile, "w") as f:
+        json.dump(json_data, fp=f)
+    # 发送文件给用户下载
+    return send_file(tempfile, as_attachment=True, download_name='data.json')
 
 
 # 启动Flask应用程序

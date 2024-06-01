@@ -1,0 +1,71 @@
+{% extends "recognition.html"%}
+{% block style_mode %}
+{% endblock %}
+{% block main_content %}
+    <div class="container">
+        <div class="row">
+            <div class="list3">
+                 <canvas id="myCanvas" width="1300" height="800" style="border:1px solid #000000;"></canvas>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mt-2 mb-2 mx-2">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-light w-100 mb-2" id="auto-button">自动分割</button>
+                                <div class="btn-group  w-100 mb-2" role="group" aria-label="Basic outlined example">
+                                    <button type="button" class="btn btn-light" id="output-button">导出手动标注</button>
+                                    <button type="button" class="btn btn-light" id="output-autoline">导出自动标注</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <button id="btnGroupDrop1" type="button" class="btn btn-light dropdown-toggle  w-100 mb-2" data-bs-toggle="dropdown" aria-expanded="false">
+                                辅助标注
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                                    <li><a class="dropdown-item" id="start_dot">开始标记</a></li>
+                                    <li><a class="dropdown-item" id="true_dot">正标记</a></li>
+                                    <li><a class="dropdown-item" id="false_dot">负标记</a></li>
+                                    <li><a class="dropdown-item" id="clean_dot">清除标记</a></li>
+                                    <li><a class="dropdown-item"  id="submit_dot">提交标记</a></li>
+                                </ul>
+                                <button id="btnGroupDrop1" type="button" class="btn btn-light dropdown-toggle  w-100 mb-2" data-bs-toggle="dropdown" aria-expanded="false">
+                                人工标注
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                                    <li><a class="dropdown-item w-100" id = "point">点</a></li>
+                                    <li><a class="dropdown-item w-100" id = "line">多边形</a></li>
+                                    <li><a class="dropdown-item w-100" id = "rectangle">矩形</a></li>
+                                    <li><a class = "dropdown-item w-100" id = "clean">清除</a></li>
+                                </ul>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mt-2 mb-2 mx-2">
+                    <div class="card-body">
+                        <div class="form-group" id="formGroup1">
+                            <input class="form-control form-control-sm mt-1 mb-3" type="file" id="imageInputRgb">
+                            <a href="#" class="btn btn-light" id="upload4">提交图像</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block import_script %}
+<script src="/static/js/label_new.js"> </script>
+<script src="/static/lib/echarts-5.5.0/dist/echarts.js"> </script>
+{# <script type="text/javascript" src="/static/lib/annotorious-2.7.13/annotorious.min.js"> </script> #}
+<script src="https://cdn.jsdelivr.net/npm/annotorious/dist/annotorious.min.js"></script>
+<script src="/static/lib/jquery-371/jquery.js"></script>
+{% endblock %}

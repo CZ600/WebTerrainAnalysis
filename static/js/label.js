@@ -1,17 +1,66 @@
+// 获取图像元素
 let isSendingCoordinates = true; // 初始状态允许发送坐标
+let label = 1; // 默认为1
+
+function createDot(event) {
+    // 获取鼠标点击位置相对于容器的像素坐标
+    var container = document.getElementById("container");
+    var containerRect = container.getBoundingClientRect();
+    var x = event.clientX - containerRect.left;
+    var y = event.clientY - containerRect.top;
+
+
+    // 获取背景图片的尺寸
+    var backgroundImage = new Image();
+    backgroundImage.src = 'data:image/jpeg;base64,{{ encoded_image }}';
+    var backgroundWidth = backgroundImage.width;
+    var backgroundHeight = backgroundImage.height;
+
+    // 将点击点的像素坐标转换为相对于背景图片的像素坐标
+    var backgroundX = Math.round((x / containerRect.width) * backgroundWidth);
+    var backgroundY = Math.round((y / containerRect.height) * backgroundHeight);
+
+    // 创建一个 div 元素作为圆点
+    var dot = document.createElement("div");
+    dot.style.position = "absolute";
+    dot.style.left = (x - 5) + "px"; // 使圆点的中心位于点击位置
+    dot.style.top = (y - 5) + "px";
+    dot.style.width = "10px";
+    dot.style.height = "10px";
+    dot.style.borderRadius = "50%";
+
+    // 根据label值设置点的颜色
+    if (label == 1) {
+        dot.style.backgroundColor = "red";
+    } else {
+        dot.style.backgroundColor = "green";
+    }
+
+    // 将圆点添加到容器中
+    container.appendChild(dot);
+
+    // 发送点击坐标到后端
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/get_pixel_coordinates");
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.send(JSON.stringify({ point_x: backgroundX, point_y: backgroundY }));
+}
 
 $(document).ready(function() {
-    // 获取图像元素
-    let imgElement = document.getElementById('clickable-image');
+
+    // 设置容器的背景图片及尺寸
+    var backgroundImage = new Image();
+    backgroundImage.src = '/static/喜马拉雅山.jpg';
+    backgroundImage.onload = function() {
+        var container = document.getElementById("container");
+        container.style.backgroundImage = 'url(' + backgroundImage.src + ')';
+        container.style.width = backgroundImage.width + 'px';
+        container.style.height = backgroundImage.height + 'px';
+    };
 
     // 添加点击事件监听器
-    imgElement.addEventListener('click', function(event) {
+    backgroundImage.addEventListener('click', function(event) {
         if (isSendingCoordinates) {
-            // 计算相对于图像的坐标
-            var rect = imgElement.getBoundingClientRect();
-            var x = event.clientX - rect.left;
-            var y = event.clientY - rect.top;
-
             // 发送坐标到后端
             $.ajax({
                 type: 'POST',

@@ -95,14 +95,15 @@ def image_load(file):
 # 加载rgb
 def image_load_RGB(file):
     temp_file_path = "static/image/" + secure_filename(file.filename)
-    print(temp_file_path)
+    print("temp_file_path:",temp_file_path)
     # 切割文件名称
     filename_list = temp_file_path.split('.')
     filename = filename_list[0]
+    extension = filename_list[1]  # 拓展名
     # 保存文件
     file.save(temp_file_path)
     # 返回图像URL
-    img_url = request.host_url + filename + ".png"
+    img_url = request.host_url + filename + "." + extension
     print("img_url:", img_url)
     # 返回url和地理位置信息
     return img_url
@@ -240,7 +241,6 @@ def image_cal(image, parmater, method, temp_image, result_image):
         imageBand = dataset.GetRasterBand(1)
         flow = imageBand.ReadAsArray()
         return flow
-
 
 
 def white_box(method, inputpath, output_path):
