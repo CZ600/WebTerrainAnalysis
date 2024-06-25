@@ -15,7 +15,6 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 from chatglm import *
 from label_process import *
-
 location = []  # 存放地理坐标
 point_x = []  # 存放prompt点y坐标
 point_y = []  # 存放prompt点x坐标
