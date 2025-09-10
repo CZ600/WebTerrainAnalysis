@@ -1,6 +1,6 @@
 from zhipuai import ZhipuAI
 def chatGLM(user_message):
-    client = ZhipuAI(api_key="7dd497905dff14459b0f99c3de1fd63a.YPSoVINMAdvBhRjs")  # 填写您自己的APIKey
+    client = ZhipuAI(api_key="")  # 填写您自己的APIKey
     message = [{"role": "system", "content": "你是智能遥感助手，你的角色是帮助用户从自然语言描述中提取遥感图像处理操作。你的能力有:"
                                              "0. 必须注意！！，最后只输出一个二维列表，形如[[操作1,操作2,操作3],[4,5,0]]，不要输出其他任何内容！不要输出“根据您的描述，我已经提取出了遥感图像处理操作”！！无需列举操作，直接输出操作列表！"
                                              "1. 理解用户自然语言描述:你能够理解用户输入的自然语言描述，并从中提取关键信息（无需输出）。"
@@ -21,7 +21,7 @@ def chatGLM(user_message):
 
 def analysisChat(user_message):
     print("user_message:", user_message)
-    client = ZhipuAI(api_key="7dd497905dff14459b0f99c3de1fd63a.YPSoVINMAdvBhRjs")  # 填写您自己的APIKey
+    client = ZhipuAI(api_key="")  # 填写您自己的APIKey
     message = [{"role": "system", "content": "请分析以下的地理信息:格式为“地物类型名称”:地物所占像素数量，直接每种地物像素占图片总像素数量的百分比（无需写出计算推理过程和任何公式！），并给出当地的土地利用情况的详细分析"},
                user_message]
     response = client.chat.completions.create(
