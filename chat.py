@@ -12,11 +12,9 @@ from dashscope import Generation
 from wsgiref.simple_server import make_server
 
 
-# sk-ac7bd32e53284528855a5f03347a4e7c
-
 def call_with_prompt(messages):
     result = ""
-    dashscope.api_key = 'sk-ac7bd32e53284528855a5f03347a4e7c'  # 将 API-KEY
+    dashscope.api_key = ''  # 将 API-KEY
     # 调用dashscope库中的Generation.call方法，使用qwen_turbo模型处理消息列表，并设置结果格式为'message'
     response = Generation.call(
         Generation.Models.qwen_turbo,
