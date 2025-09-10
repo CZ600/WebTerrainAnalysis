@@ -34,8 +34,6 @@ app = Flask(__name__)
 app.secret_key = ''
 bootstrap = Bootstrap5(app)
 
-'''
-
 # 路由
 # 数据库管理
 # 配置数据库 URI
