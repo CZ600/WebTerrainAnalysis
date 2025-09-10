@@ -29,18 +29,11 @@ json_data = {
     "imageData": ""  # 这里应该是实际图片的base64编码
 }  # 存放labelme格式的标签文件
 
-# sk-ac7bd32e53284528855a5f03347a4e7c
 
 app = Flask(__name__)
-app.secret_key = '3.1415926535897932'
+app.secret_key = ''
 bootstrap = Bootstrap5(app)
 
-'''
-# 添加拓展
-%load_ext sql
-# 数据库连接初始化
-%sql postgresql://postgres:123456@127.0.0.1/gisc
-# conn=psycopg2.connect(dbname=gisc,user=gisc,password=ZCH20021104,host = "192.168.171.128",port=5432)
 '''
 
 # 路由
